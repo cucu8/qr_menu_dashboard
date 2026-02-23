@@ -7,7 +7,7 @@ interface RestaurantModalProps {
     isOpen: boolean;
     restaurant: Restaurant | null;   // null = create mode
     onClose: () => void;
-    onSave: (data: CreateRestaurantDto | UpdateRestaurantDto, id?: string) => Promise<void>;
+    onSave: (data: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => Promise<void>;
 }
 
 const empty = (): CreateRestaurantDto => ({
@@ -16,6 +16,7 @@ const empty = (): CreateRestaurantDto => ({
 
 export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }: RestaurantModalProps) {
     const [form, setForm] = useState<CreateRestaurantDto>(empty());
+    const [owner, setOwner] = useState({ username: '', email: '', password: '' });
     const [isActive, setIsActive] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
             setIsActive(restaurant.isActive);
         } else {
             setForm(empty());
+            setOwner({ username: '', email: '', password: '' });
             setIsActive(true);
         }
         setError(null);
@@ -42,13 +44,18 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name.trim()) { setError('Restoran adı zorunlu.'); return; }
+
+        if (!restaurant && (!owner.username.trim() || !owner.email.trim() || !owner.password.trim())) {
+            setError('Yeni restoran oluştururken yönetici (Owner) bilgileri zorunludur.'); return;
+        }
+
         setSaving(true);
         setError(null);
         try {
             const dto = restaurant
                 ? ({ ...form, isActive } as UpdateRestaurantDto)
                 : form;
-            await onSave(dto, restaurant?.id);
+            await onSave(dto, restaurant?.id, !restaurant ? owner : undefined);
             onClose();
         } catch {
             setError('Kaydetme başarısız, tekrar dene.');
@@ -114,6 +121,45 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                             />
                         </div>
                     </div>
+
+                    {!restaurant && (
+                        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                            <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#374151' }}>Restoran Yöneticisi (Owner)</h3>
+                            <div className="form-grid">
+                                <div className="form-row">
+                                    <label>Kullanıcı Adı *</label>
+                                    <input
+                                        className="form-input"
+                                        value={owner.username}
+                                        onChange={(e) => setOwner((o) => ({ ...o, username: e.target.value }))}
+                                        placeholder="owner1"
+                                        required={!restaurant}
+                                    />
+                                </div>
+                                <div className="form-row">
+                                    <label>E-posta *</label>
+                                    <input
+                                        type="email"
+                                        className="form-input"
+                                        value={owner.email}
+                                        onChange={(e) => setOwner((o) => ({ ...o, email: e.target.value }))}
+                                        placeholder="ornek@test.com"
+                                        required={!restaurant}
+                                    />
+                                </div>
+                                <div className="form-row" style={{ gridColumn: 'span 2' }}>
+                                    <label>Şifre *</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        value={owner.password}
+                                        onChange={(e) => setOwner((o) => ({ ...o, password: e.target.value }))}
+                                        required={!restaurant}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {restaurant && (
                         <div className="form-toggle">

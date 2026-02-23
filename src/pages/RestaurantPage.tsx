@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { restaurantApi, categoryApi, productApi, logout } from '../api';
+import { restaurantApi, categoryApi, productApi, logout, userApi } from '../api';
 import type {
     Restaurant, RestaurantWithMenu, MenuCategory, Product,
     CreateRestaurantDto, UpdateRestaurantDto,
@@ -16,8 +16,19 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import './RestaurantPage.css';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
-function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts }: any) {
+interface DecodedToken {
+    nameid?: string;
+    unique_name?: string;
+    email?: string;
+    role?: string;
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+    RestaurantId?: string;
+}
+
+function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts }: { cat: MenuCategory & { products: Product[] }, onEdit: (c: MenuCategory) => void, onDelete: (c: MenuCategory) => void, onAddProduct: (c: MenuCategory) => void, renderProducts: () => React.ReactNode }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: cat.id });
     const style = { transform: CSS.Transform.toString(transform), transition };
     return (
@@ -40,7 +51,7 @@ function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts 
     );
 }
 
-function SortableProductRow({ p, onEdit, onDelete }: any) {
+function SortableProductRow({ p, onEdit, onDelete }: { p: Product, onEdit: (p: Product) => void, onDelete: (p: Product) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: p.id });
     const style = { transform: CSS.Transform.toString(transform) ? CSS.Transform.toString(transform)?.replace(/Y\((.*?)\)/, 'Y($1)') : undefined, transition };
     return (
@@ -83,6 +94,8 @@ export default function RestaurantPage() {
     const [catModal, setCatModal] = useState<{ open: boolean; target: MenuCategory | null }>({ open: false, target: null });
     const [prodModal, setProdModal] = useState<{ open: boolean; target: Product | null; categoryId: string | null }>({ open: false, target: null, categoryId: null });
     const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     // ── Confirm delete ───────────────────────────────────────────────────
     const [confirm, setConfirm] = useState<{ message: string; onOk: () => void } | null>(null);
@@ -107,6 +120,14 @@ export default function RestaurantPage() {
         fetchRestaurantsRef.current = fetch;
         fetch();
 
+        const token = localStorage.getItem('dashboard_token');
+        if (token) {
+            try {
+                const decoded = jwtDecode<DecodedToken>(token);
+                setUserRole(decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || null);
+            } catch { /* ignore */ }
+        }
+
         return () => { controller.abort(); };
     }, []);
 
@@ -123,11 +144,24 @@ export default function RestaurantPage() {
     }, []);
 
     // ── Restaurant CRUD ───────────────────────────────────────────────────
-    const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string) => {
+    const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => {
         if (id) {
             await restaurantApi.update(id, dto as UpdateRestaurantDto);
         } else {
-            await restaurantApi.create(dto as CreateRestaurantDto);
+            const newRest = await restaurantApi.create(dto as CreateRestaurantDto);
+            if (ownerDetails && ownerDetails.username && ownerDetails.password) {
+                try {
+                    await userApi.create({
+                        username: ownerDetails.username,
+                        email: ownerDetails.email,
+                        password: ownerDetails.password,
+                        role: 'Owner',
+                        restaurantId: newRest.id
+                    });
+                } catch (e) {
+                    console.error("Owner creation failed", e);
+                }
+            }
         }
         await loadRestaurants();
         if (selectedRest && id === selectedRest.id) await loadMenu(id);
@@ -245,7 +279,12 @@ export default function RestaurantPage() {
                 <div className="rp-sidebar-header">
                     <span>Restoranlar</span>
                     <div className="rp-sidebar-header-actions">
-                        <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                        {userRole === 'Admin' && (
+                            <>
+                                <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                                <button className="icon-btn" title="Kullanıcı Yönetimi" onClick={() => navigate('/users')}>👥</button>
+                            </>
+                        )}
                         <button className="icon-btn" title="Şifre Değiştir" onClick={() => setChangePasswordModalOpen(true)}>🔑</button>
                         <button className="icon-btn" title="Çıkış Yap" onClick={logout}>🚪</button>
                         <button className="icon-btn mobile-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
@@ -335,9 +374,9 @@ export default function RestaurantPage() {
                                             <SortableCategory
                                                 key={cat.id}
                                                 cat={cat}
-                                                onEdit={(c: any) => setCatModal({ open: true, target: c })}
+                                                onEdit={(c: MenuCategory) => setCatModal({ open: true, target: c })}
                                                 onDelete={handleDeleteCategory}
-                                                onAddProduct={(c: any) => setProdModal({ open: true, target: null, categoryId: c.id })}
+                                                onAddProduct={(c: MenuCategory) => setProdModal({ open: true, target: null, categoryId: c.id })}
                                                 renderProducts={() => (
                                                     <div className="rp-table-wrapper">
                                                         <table className="rp-table">
@@ -357,7 +396,7 @@ export default function RestaurantPage() {
                                                                             <SortableProductRow
                                                                                 key={p.id}
                                                                                 p={p}
-                                                                                onEdit={(prod: any) => setProdModal({ open: true, target: prod, categoryId: prod.menuCategoryId })}
+                                                                                onEdit={(prod: Product) => setProdModal({ open: true, target: prod, categoryId: prod.menuCategoryId })}
                                                                                 onDelete={handleDeleteProduct}
                                                                             />
                                                                         ))}

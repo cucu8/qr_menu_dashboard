@@ -89,3 +89,21 @@ export interface CreateProductDto {
 export interface UpdateProductDto extends CreateProductDto {
   isAvailable: boolean;
 }
+
+// ── Users ─────────────────────────────────────────────────────
+export interface UserResponseDto {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  restaurantId?: string;
+  restaurantName?: string;
+}
+
+export interface CreateUserRequestDto {
+  username: string;
+  email: string;
+  password?: string;
+  role: 'Admin' | 'Owner';
+  restaurantId?: string;
+}

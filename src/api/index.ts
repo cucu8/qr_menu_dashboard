@@ -5,6 +5,7 @@ import type {
     CreateRestaurantDto, UpdateRestaurantDto,
     CreateMenuCategoryDto, UpdateMenuCategoryDto,
     CreateProductDto, UpdateProductDto,
+    UserResponseDto, CreateUserRequestDto,
 } from './types';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -56,6 +57,12 @@ export const authApi = {
     login: (body: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     seedAdmin: () => request<any>('/auth/seed-admin', { method: 'POST' }),
     changePassword: (body: any) => request<{ message: string }>('/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+// ── Users ────────────────────────────────────────────────────────────
+export const userApi = {
+    getAll: () => request<UserResponseDto[]>('/users'),
+    create: (dto: CreateUserRequestDto) => request<UserResponseDto>('/users', { method: 'POST', body: JSON.stringify(dto) }),
 };
 
 // ── Restaurants ──────────────────────────────────────────────────────
@@ -141,4 +148,5 @@ export type {
     CreateRestaurantDto, UpdateRestaurantDto,
     CreateMenuCategoryDto, UpdateMenuCategoryDto,
     CreateProductDto, UpdateProductDto,
+    UserResponseDto, CreateUserRequestDto,
 };

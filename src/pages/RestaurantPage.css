@@ -1,8 +1,7 @@
 /* RestaurantPage layout */
 .rp {
     display: flex;
-    height: 100vh;
-    height: 100dvh;
+    flex: 1;
     background: var(--bg-primary);
     font-family: inherit;
     overflow: hidden;
