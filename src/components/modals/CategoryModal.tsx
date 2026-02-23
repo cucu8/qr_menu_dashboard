@@ -91,16 +91,7 @@ export default function CategoryModal({ isOpen, category, onClose, onSave }: Cat
                         />
                     </div>
 
-                    <div className="form-row">
-                        <label>Sıra</label>
-                        <input
-                            className="form-input"
-                            type="number"
-                            min={0}
-                            value={form.displayOrder}
-                            onChange={(e) => setForm((f) => ({ ...f, displayOrder: Number(e.target.value) }))}
-                        />
-                    </div>
+
 
                     {category && (
                         <div className="form-toggle">

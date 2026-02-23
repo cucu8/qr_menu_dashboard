@@ -10,7 +10,67 @@ import RestaurantModal from '../components/modals/RestaurantModal';
 import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
 import { BASE_URL } from '../api/types';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import './RestaurantPage.css';
+
+function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts }: any) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: cat.id });
+    const style = { transform: CSS.Transform.toString(transform), transition };
+    return (
+        <div ref={setNodeRef} style={style} className="rp-category">
+            <div className="rp-cat-header">
+                <div className="rp-cat-title">
+                    <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', marginRight: '10px' }}>☰</span>
+                    {cat.photoUrl && <img className="rp-cat-photo" src={`${BASE_URL}${cat.photoUrl}`} alt="" />}
+                    <span>{cat.name}</span>
+                    <span className="rp-cat-count">{cat.products.length} ürün</span>
+                </div>
+                <div className="rp-cat-actions">
+                    <button className="row-btn" onClick={() => onEdit(cat)}>✏️ Düzenle</button>
+                    <button className="row-btn danger" onClick={() => onDelete(cat)}>🗑️ Sil</button>
+                    <button className="btn-add small" onClick={() => onAddProduct(cat)}>+ Ürün</button>
+                </div>
+            </div>
+            {renderProducts()}
+        </div>
+    );
+}
+
+function SortableProductRow({ p, onEdit, onDelete }: any) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: p.id });
+    const style = { transform: CSS.Transform.toString(transform) ? CSS.Transform.toString(transform)?.replace(/Y\((.*?)\)/, 'Y($1)') : undefined, transition };
+    return (
+        <tr ref={setNodeRef} style={style}>
+            <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab' }}>☰</span>
+                {p.photoUrl
+                    ? <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
+                    : <div className="prod-thumb-empty">🍽️</div>
+                }
+            </td>
+            <td>
+                <div className="prod-name">{p.name}</div>
+                {p.description && <div className="prod-desc">{p.description}</div>}
+            </td>
+            <td className="prod-price">₺{p.price.toFixed(2)}</td>
+            <td className="prod-order hide-mobile">{p.displayOrder}</td>
+            <td className="hide-tablet">
+                <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
+                    {p.isAvailable ? 'Mevcut' : 'Tükendi'}
+                </span>
+            </td>
+            <td>
+                <div className="prod-actions">
+                    <button className="row-btn" onClick={() => onEdit(p)}>✏️</button>
+                    <button className="row-btn danger" onClick={() => onDelete(p)}>🗑️</button>
+                </div>
+            </td>
+        </tr>
+    );
+}
 
 export default function RestaurantPage() {
     // ── Restaurants ──────────────────────────────────────────────────────
@@ -124,6 +184,56 @@ export default function RestaurantPage() {
     // ── Sidebar State ───────────────────────────────────────────────────
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // ── Drag and Drop Handlers ──────────────────────────────────────────
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const handleCategoryDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id || !selectedRest) return;
+
+        const oldIndex = selectedRest.menuCategories.findIndex((c) => c.id === active.id);
+        const newIndex = selectedRest.menuCategories.findIndex((c) => c.id === over.id);
+
+        const newCategories = arrayMove(selectedRest.menuCategories, oldIndex, newIndex);
+        const updates = newCategories.map((c, index) => ({ id: c.id, displayOrder: index }));
+
+        setSelectedRest({ ...selectedRest, menuCategories: newCategories });
+
+        try {
+            await categoryApi.reorder(selectedRest.id, updates);
+        } catch {
+            await loadMenu(selectedRest.id); // Revert on failure
+        }
+    };
+
+    const handleProductDragEnd = async (categoryId: string, event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id || !selectedRest) return;
+
+        const categoryIndex = selectedRest.menuCategories.findIndex(c => c.id === categoryId);
+        if (categoryIndex === -1) return;
+
+        const category = selectedRest.menuCategories[categoryIndex];
+        const oldIndex = category.products.findIndex((p) => p.id === active.id);
+        const newIndex = category.products.findIndex((p) => p.id === over.id);
+
+        const newProducts = arrayMove(category.products, oldIndex, newIndex);
+        const updates = newProducts.map((p, index) => ({ id: p.id, displayOrder: index }));
+
+        const newCategories = [...selectedRest.menuCategories];
+        newCategories[categoryIndex] = { ...category, products: newProducts };
+        setSelectedRest({ ...selectedRest, menuCategories: newCategories });
+
+        try {
+            await productApi.reorder(categoryId, updates);
+        } catch {
+            await loadMenu(selectedRest.id); // Revert on failure
+        }
+    };
+
     return (
         <div className={`rp ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             {/* ── Mobile Sidebar Overlay ── */}
@@ -215,68 +325,51 @@ export default function RestaurantPage() {
                         {selectedRest.menuCategories.length === 0 ? (
                             <div className="rp-empty-main">Henüz kategori yok. "Kategori Ekle" butonuna tıkla.</div>
                         ) : (
-                            <div className="rp-categories">
-                                {selectedRest.menuCategories.map((cat) => (
-                                    <div key={cat.id} className="rp-category">
-                                        <div className="rp-cat-header">
-                                            <div className="rp-cat-title">
-                                                {cat.photoUrl && <img className="rp-cat-photo" src={`${BASE_URL}${cat.photoUrl}`} alt="" />}
-                                                <span>{cat.name}</span>
-                                                <span className="rp-cat-count">{cat.products.length} ürün</span>
-                                            </div>
-                                            <div className="rp-cat-actions">
-                                                <button className="row-btn" onClick={() => setCatModal({ open: true, target: cat })}>✏️ Düzenle</button>
-                                                <button className="row-btn danger" onClick={() => handleDeleteCategory(cat)}>🗑️ Sil</button>
-                                                <button className="btn-add small" onClick={() => setProdModal({ open: true, target: null, categoryId: cat.id })}>+ Ürün</button>
-                                            </div>
-                                        </div>
-
-                                        <div className="rp-table-wrapper">
-                                            <table className="rp-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th></th>
-                                                        <th>Ürün</th>
-                                                        <th>Fiyat</th>
-                                                        <th className="hide-mobile">Sıra</th>
-                                                        <th className="hide-tablet">Durum</th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {cat.products.map((p) => (
-                                                        <tr key={p.id}>
-                                                            <td>
-                                                                {p.photoUrl
-                                                                    ? <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
-                                                                    : <div className="prod-thumb-empty">🍽️</div>
-                                                                }
-                                                            </td>
-                                                            <td>
-                                                                <div className="prod-name">{p.name}</div>
-                                                                {p.description && <div className="prod-desc">{p.description}</div>}
-                                                            </td>
-                                                            <td className="prod-price">₺{p.price.toFixed(2)}</td>
-                                                            <td className="prod-order hide-mobile">{p.displayOrder}</td>
-                                                            <td className="hide-tablet">
-                                                                <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
-                                                                    {p.isAvailable ? 'Mevcut' : 'Tükendi'}
-                                                                </span>
-                                                            </td>
-                                                            <td>
-                                                                <div className="prod-actions">
-                                                                    <button className="row-btn" onClick={() => setProdModal({ open: true, target: p, categoryId: p.menuCategoryId })}>✏️</button>
-                                                                    <button className="row-btn danger" onClick={() => handleDeleteProduct(p)}>🗑️</button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+                                <SortableContext items={selectedRest.menuCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                                    <div className="rp-categories">
+                                        {selectedRest.menuCategories.map((cat) => (
+                                            <SortableCategory
+                                                key={cat.id}
+                                                cat={cat}
+                                                onEdit={(c: any) => setCatModal({ open: true, target: c })}
+                                                onDelete={handleDeleteCategory}
+                                                onAddProduct={(c: any) => setProdModal({ open: true, target: null, categoryId: c.id })}
+                                                renderProducts={() => (
+                                                    <div className="rp-table-wrapper">
+                                                        <table className="rp-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Ürün</th>
+                                                                    <th>Detay</th>
+                                                                    <th>Fiyat</th>
+                                                                    <th className="hide-mobile">Sıra</th>
+                                                                    <th className="hide-tablet">Durum</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleProductDragEnd(cat.id, e)}>
+                                                                    <SortableContext items={cat.products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                                                                        {cat.products.map((p) => (
+                                                                            <SortableProductRow
+                                                                                key={p.id}
+                                                                                p={p}
+                                                                                onEdit={(prod: any) => setProdModal({ open: true, target: prod, categoryId: prod.menuCategoryId })}
+                                                                                onDelete={handleDeleteProduct}
+                                                                            />
+                                                                        ))}
+                                                                    </SortableContext>
+                                                                </DndContext>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            />
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                </SortableContext>
+                            </DndContext>
                         )}
                     </>
                 )}

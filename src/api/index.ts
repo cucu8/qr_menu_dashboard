@@ -51,6 +51,8 @@ export const categoryApi = {
         request<void>(`/categories/${id}`, { method: 'DELETE' }),
     hardDelete: (id: string) =>
         request<void>(`/categories/${id}/hard`, { method: 'DELETE' }),
+    reorder: (restaurantId: string, updates: { id: string, displayOrder: number }[]) =>
+        request<void>(`/restaurants/${restaurantId}/categories/reorder`, { method: 'PUT', body: JSON.stringify(updates) }),
 };
 
 // ── Products ──────────────────────────────────────────────────────────
@@ -68,6 +70,8 @@ export const productApi = {
         request<void>(`/products/${id}`, { method: 'DELETE' }),
     hardDelete: (id: string) =>
         request<void>(`/products/${id}/hard`, { method: 'DELETE' }),
+    reorder: (categoryId: string, updates: { id: string, displayOrder: number }[]) =>
+        request<void>(`/categories/${categoryId}/products/reorder`, { method: 'PUT', body: JSON.stringify(updates) }),
 };
 
 // ── Upload ────────────────────────────────────────────────────────────

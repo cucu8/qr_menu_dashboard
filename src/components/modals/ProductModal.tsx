@@ -102,29 +102,17 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
                         />
                     </div>
 
-                    <div className="form-grid">
-                        <div className="form-row">
-                            <label>Fiyat (₺) *</label>
-                            <input
-                                className="form-input"
-                                type="number"
-                                min={0}
-                                step={0.01}
-                                value={priceStr}
-                                onChange={(e) => setPriceStr(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="form-row">
-                            <label>Sıra</label>
-                            <input
-                                className="form-input"
-                                type="number"
-                                min={0}
-                                value={orderStr}
-                                onChange={(e) => setOrderStr(e.target.value)}
-                            />
-                        </div>
+                    <div className="form-row">
+                        <label>Fiyat (₺) *</label>
+                        <input
+                            className="form-input"
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={priceStr}
+                            onChange={(e) => setPriceStr(e.target.value)}
+                            required
+                        />
                     </div>
 
                     {product && (
