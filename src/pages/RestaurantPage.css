@@ -2,6 +2,7 @@
 .rp {
     display: flex;
     height: 100vh;
+    height: 100dvh;
     background: var(--bg-primary);
     font-family: inherit;
     overflow: hidden;
@@ -519,7 +520,7 @@
     }
 
     .rp-categories {
-        padding: 16px;
+        padding: 16px 16px 40px 16px;
         width: 100%;
         max-width: 100vw;
         box-sizing: border-box;
