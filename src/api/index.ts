@@ -7,7 +7,8 @@ import type {
     CreateProductDto, UpdateProductDto,
 } from './types';
 
-const BASE = import.meta.env.PROD ? 'http://31.57.33.170:5000/api' : 'http://localhost:5252/api';
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const BASE = isLocal ? 'http://localhost:5252/api' : 'http://31.57.33.170:5000/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const res = await fetch(`${BASE}${path}`, {

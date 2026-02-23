@@ -9,7 +9,7 @@ import type {
 import RestaurantModal from '../components/modals/RestaurantModal';
 import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
-import { BASE_URL } from '../api/types';
+import { BASE_URL, FRONTEND_URL } from '../api/types';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -270,7 +270,7 @@ export default function RestaurantPage() {
                                     {r.address && <span className="rp-rest-addr">{r.address}</span>}
                                     <a
                                         className="rp-menu-link"
-                                        href={`http://localhost:3000/${r.id}`}
+                                        href={`${FRONTEND_URL}/${r.id}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         onClick={(e) => e.stopPropagation()}
