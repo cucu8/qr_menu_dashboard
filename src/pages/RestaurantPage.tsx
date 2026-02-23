@@ -121,13 +121,22 @@ export default function RestaurantPage() {
         });
     };
 
+    // ── Sidebar State ───────────────────────────────────────────────────
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     return (
-        <div className="rp">
+        <div className={`rp ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            {/* ── Mobile Sidebar Overlay ── */}
+            {isSidebarOpen && <div className="rp-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+
             {/* ── Left sidebar: restaurant list ───────────────────────────── */}
             <aside className="rp-sidebar">
                 <div className="rp-sidebar-header">
                     <span>Restoranlar</span>
-                    <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                    <div className="rp-sidebar-header-actions">
+                        <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                        <button className="icon-btn mobile-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -140,7 +149,10 @@ export default function RestaurantPage() {
                             <li
                                 key={r.id}
                                 className={`rp-rest-item ${selectedRest?.id === r.id ? 'active' : ''}`}
-                                onClick={() => loadMenu(r.id)}
+                                onClick={() => {
+                                    loadMenu(r.id);
+                                    setIsSidebarOpen(false); // Mobil menüde seçince kapat
+                                }}
                             >
                                 <div className="rp-rest-logo">
                                     {r.logoUrl ? <img src={`${BASE_URL}${r.logoUrl}`} alt="" /> : '🏪'}
@@ -148,6 +160,16 @@ export default function RestaurantPage() {
                                 <div className="rp-rest-info">
                                     <span className="rp-rest-name">{r.name}</span>
                                     {r.address && <span className="rp-rest-addr">{r.address}</span>}
+                                    <a
+                                        className="rp-menu-link"
+                                        href={`http://localhost:3000/${r.id}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title="QR Menüyü önizle"
+                                    >
+                                        🔗 Menüyü Gör
+                                    </a>
                                 </div>
                                 <div className="rp-rest-actions">
                                     <button className="row-btn" title="Düzenle" onClick={(e) => { e.stopPropagation(); setRestModal({ open: true, target: r }); }}>✏️</button>
@@ -156,11 +178,18 @@ export default function RestaurantPage() {
                             </li>
                         ))}
                     </ul>
+
                 )}
             </aside>
 
             {/* ── Right panel: menu management ────────────────────────────── */}
             <main className="rp-main">
+                <div className="rp-mobile-bar">
+                    <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>
+                        ☰ <span>Restoran Seç</span>
+                    </button>
+                </div>
+
                 {!selectedRest ? (
                     <div className="rp-placeholder">
                         <span>👈</span>
@@ -171,7 +200,7 @@ export default function RestaurantPage() {
                 ) : (
                     <>
                         <div className="rp-main-header">
-                            <div>
+                            <div className="rp-main-header-info">
                                 <h1>{selectedRest.name}</h1>
                                 {selectedRest.address && <p className="rp-subtext">{selectedRest.address}</p>}
                             </div>
@@ -202,47 +231,49 @@ export default function RestaurantPage() {
                                             </div>
                                         </div>
 
-                                        <table className="rp-table">
-                                            <thead>
-                                                <tr>
-                                                    <th></th>
-                                                    <th>Ürün</th>
-                                                    <th>Fiyat</th>
-                                                    <th>Sıra</th>
-                                                    <th>Durum</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {cat.products.map((p) => (
-                                                    <tr key={p.id}>
-                                                        <td>
-                                                            {p.photoUrl
-                                                                ? <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
-                                                                : <div className="prod-thumb-empty">🍽️</div>
-                                                            }
-                                                        </td>
-                                                        <td>
-                                                            <div className="prod-name">{p.name}</div>
-                                                            {p.description && <div className="prod-desc">{p.description}</div>}
-                                                        </td>
-                                                        <td className="prod-price">₺{p.price.toFixed(2)}</td>
-                                                        <td className="prod-order">{p.displayOrder}</td>
-                                                        <td>
-                                                            <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
-                                                                {p.isAvailable ? 'Mevcut' : 'Tükendi'}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <div className="prod-actions">
-                                                                <button className="row-btn" onClick={() => setProdModal({ open: true, target: p, categoryId: p.menuCategoryId })}>✏️</button>
-                                                                <button className="row-btn danger" onClick={() => handleDeleteProduct(p)}>🗑️</button>
-                                                            </div>
-                                                        </td>
+                                        <div className="rp-table-wrapper">
+                                            <table className="rp-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th>Ürün</th>
+                                                        <th>Fiyat</th>
+                                                        <th className="hide-mobile">Sıra</th>
+                                                        <th className="hide-tablet">Durum</th>
+                                                        <th></th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody>
+                                                    {cat.products.map((p) => (
+                                                        <tr key={p.id}>
+                                                            <td>
+                                                                {p.photoUrl
+                                                                    ? <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
+                                                                    : <div className="prod-thumb-empty">🍽️</div>
+                                                                }
+                                                            </td>
+                                                            <td>
+                                                                <div className="prod-name">{p.name}</div>
+                                                                {p.description && <div className="prod-desc">{p.description}</div>}
+                                                            </td>
+                                                            <td className="prod-price">₺{p.price.toFixed(2)}</td>
+                                                            <td className="prod-order hide-mobile">{p.displayOrder}</td>
+                                                            <td className="hide-tablet">
+                                                                <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
+                                                                    {p.isAvailable ? 'Mevcut' : 'Tükendi'}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <div className="prod-actions">
+                                                                    <button className="row-btn" onClick={() => setProdModal({ open: true, target: p, categoryId: p.menuCategoryId })}>✏️</button>
+                                                                    <button className="row-btn danger" onClick={() => handleDeleteProduct(p)}>🗑️</button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -250,6 +281,7 @@ export default function RestaurantPage() {
                     </>
                 )}
             </main>
+
 
             {/* ── Modals ──────────────────────────────────────────────────────── */}
             <RestaurantModal

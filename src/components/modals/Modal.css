@@ -209,3 +209,36 @@
 .btn-danger:hover:not(:disabled) {
     background: rgba(239, 68, 68, .25);
 }
+
+/* ── Modal Responsive ────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .modal {
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        padding: 16px 20px 12px;
+    }
+
+    .modal-body {
+        padding: 16px 20px 20px;
+        gap: 12px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        padding: 12px;
+    }
+}
