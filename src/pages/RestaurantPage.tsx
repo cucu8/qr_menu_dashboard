@@ -46,10 +46,9 @@ function SortableProductRow({ p, onEdit, onDelete }: any) {
         <tr ref={setNodeRef} style={style}>
             <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab' }}>☰</span>
-                {p.photoUrl
-                    ? <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
-                    : <div className="prod-thumb-empty">🍽️</div>
-                }
+                {p.photoUrl && (
+                    <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
+                )}
             </td>
             <td>
                 <div className="prod-name">{p.name}</div>
