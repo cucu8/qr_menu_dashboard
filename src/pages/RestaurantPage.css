@@ -2,7 +2,7 @@
 .rp {
     display: flex;
     height: 100vh;
-    background: #0a0f1a;
+    background: var(--bg-primary);
     font-family: inherit;
     overflow: hidden;
 }
@@ -11,8 +11,8 @@
 .rp-sidebar {
     width: 280px;
     min-width: 280px;
-    background: #0d1526;
-    border-right: 1px solid rgba(99, 102, 241, .15);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -26,10 +26,10 @@
     padding: 20px 16px 14px;
     font-size: 13px;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .6px;
-    border-bottom: 1px solid rgba(99, 102, 241, .1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .rp-sidebar-header-actions {
@@ -43,9 +43,9 @@
 }
 
 .icon-btn {
-    background: rgba(99, 102, 241, .15);
-    border: 1px solid rgba(99, 102, 241, .3);
-    color: #a5b4fc;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     border-radius: 6px;
     width: 28px;
     height: 28px;
@@ -58,8 +58,9 @@
 }
 
 .icon-btn:hover {
-    background: #6366f1;
+    background: var(--accent-primary);
     color: #fff;
+    border-color: var(--accent-primary);
 }
 
 .rp-rest-list {
@@ -82,11 +83,12 @@
 }
 
 .rp-rest-item:hover {
-    background: rgba(99, 102, 241, .08);
+    background: var(--bg-secondary);
 }
 
 .rp-rest-item.active {
-    background: rgba(99, 102, 241, .15);
+    background: var(--accent-primary);
+    color: white;
 }
 
 .rp-rest-logo {
@@ -98,7 +100,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(99, 102, 241, .1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -114,7 +117,7 @@
 }
 
 .rp-rest-name {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 600;
     display: block;
@@ -124,7 +127,7 @@
 }
 
 .rp-rest-addr {
-    color: #64748b;
+    color: var(--text-secondary);
     font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
@@ -139,7 +142,7 @@
     margin-top: 4px;
     font-size: 11px;
     font-weight: 600;
-    color: #818cf8;
+    color: var(--accent-primary);
     text-decoration: none;
     opacity: 0;
     transition: opacity .15s, color .15s;
@@ -149,8 +152,14 @@
     opacity: 1;
 }
 
+.rp-rest-item.active .rp-rest-name,
+.rp-rest-item.active .rp-rest-addr,
+.rp-rest-item.active .rp-menu-link {
+    color: white;
+}
+
 .rp-menu-link:hover {
-    color: #a5b4fc;
+    color: var(--accent-secondary);
     text-decoration: underline;
 }
 
@@ -177,21 +186,21 @@
 .rp-mobile-bar {
     display: none;
     padding: 12px 16px;
-    background: #0d1526;
-    border-bottom: 1px solid rgba(99, 102, 241, .15);
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .hamburger-btn {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #a5b4fc;
+    color: var(--accent-primary);
     font-weight: 600;
     font-size: 14px;
     padding: 6px 12px;
-    background: rgba(99, 102, 241, .1);
+    background: var(--bg-card);
     border-radius: 8px;
-    border: 1px solid rgba(99, 102, 241, .2);
+    border: 1px solid var(--border-color);
 }
 
 .rp-sidebar-overlay {
@@ -208,18 +217,19 @@
     align-items: center;
     justify-content: space-between;
     padding: 24px 28px 16px;
-    border-bottom: 1px solid rgba(99, 102, 241, .1);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
 }
 
 .rp-main-header h1 {
     font-size: 22px;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .rp-subtext {
-    color: #64748b;
+    color: var(--text-secondary);
     font-size: 13px;
     margin: 4px 0 0;
 }
@@ -234,12 +244,12 @@
 }
 
 .rp-category {
-    background: rgba(15, 23, 42, .7);
-    border: 1px solid rgba(99, 102, 241, .15);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border-radius: 14px;
     overflow: hidden;
     flex-shrink: 0;
-    /* İçeriğin küçülmesini engelle */
 }
 
 .rp-cat-header {
@@ -247,8 +257,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: rgba(99, 102, 241, .07);
-    border-bottom: 1px solid rgba(99, 102, 241, .1);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .rp-cat-title {
@@ -256,7 +266,7 @@
     align-items: center;
     gap: 10px;
     font-weight: 700;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 15px;
 }
 
@@ -270,8 +280,9 @@
 .rp-cat-count {
     font-size: 12px;
     font-weight: 500;
-    color: #64748b;
-    background: rgba(99, 102, 241, .1);
+    color: var(--accent-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     padding: 2px 8px;
     border-radius: 20px;
 }
@@ -292,7 +303,7 @@
     text-align: left;
     font-size: 11px;
     font-weight: 700;
-    color: #475569;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .5px;
     padding: 10px 14px 8px;
@@ -300,12 +311,12 @@
 
 .rp-table td {
     padding: 10px 14px;
-    border-top: 1px solid rgba(99, 102, 241, .07);
+    border-top: 1px solid var(--border-color);
     vertical-align: middle;
 }
 
 .rp-table tr:hover td {
-    background: rgba(99, 102, 241, .04);
+    background: var(--bg-primary);
 }
 
 .prod-thumb {
@@ -323,30 +334,31 @@
     align-items: center;
     justify-content: center;
     font-size: 22px;
-    background: rgba(99, 102, 241, .08);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
 }
 
 .prod-name {
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 .prod-desc {
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-secondary);
     margin-top: 2px;
 }
 
 .prod-price {
     font-weight: 700;
-    color: #a5b4fc;
+    color: var(--accent-primary);
     font-size: 14px;
     white-space: nowrap;
 }
 
 .prod-order {
-    color: #64748b;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -357,9 +369,9 @@
 
 /* ── Shared ──────────────────────────────────────────────── */
 .row-btn {
-    background: rgba(255, 255, 255, .05);
-    border: 1px solid rgba(255, 255, 255, .08);
-    color: #94a3b8;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     border-radius: 6px;
     padding: 5px 10px;
     font-size: 12px;
@@ -369,18 +381,18 @@
 }
 
 .row-btn:hover {
-    background: rgba(255, 255, 255, .1);
-    color: #f1f5f9;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .row-btn.danger:hover {
-    background: rgba(239, 68, 68, .15);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, .3);
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
 }
 
 .btn-add {
-    background: #6366f1;
+    background: var(--accent-primary);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -393,7 +405,7 @@
 }
 
 .btn-add:hover {
-    background: #4f46e5;
+    background: var(--accent-secondary);
 }
 
 .btn-add.small {
@@ -410,13 +422,13 @@
 }
 
 .badge-green {
-    background: rgba(34, 197, 94, .12);
-    color: #4ade80;
+    background: var(--success);
+    color: white;
 }
 
 .badge-red {
-    background: rgba(239, 68, 68, .12);
-    color: #f87171;
+    background: var(--danger);
+    color: white;
 }
 
 .rp-empty,
@@ -424,7 +436,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #475569;
+    color: var(--text-secondary);
     font-size: 14px;
     padding: 24px;
 }
@@ -435,7 +447,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #475569;
+    color: var(--text-secondary);
     gap: 12px;
 }
 
@@ -448,17 +460,17 @@
 }
 
 .confirm-dialog {
-    background: #0f172a;
-    border: 1px solid rgba(239, 68, 68, .3);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 24px;
     max-width: 380px;
     width: 100%;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+    box-shadow: var(--glass-shadow);
 }
 
 .confirm-dialog p {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 15px;
     margin: 0 0 20px;
     line-height: 1.5;

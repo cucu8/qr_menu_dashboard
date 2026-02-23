@@ -55,7 +55,6 @@ function SortableProductRow({ p, onEdit, onDelete }: any) {
                 {p.description && <div className="prod-desc">{p.description}</div>}
             </td>
             <td className="prod-price">₺{p.price.toFixed(2)}</td>
-            <td className="prod-order hide-mobile">{p.displayOrder}</td>
             <td className="hide-tablet">
                 <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
                     {p.isAvailable ? 'Mevcut' : 'Tükendi'}
@@ -342,7 +341,6 @@ export default function RestaurantPage() {
                                                                     <th>Ürün</th>
                                                                     <th>Detay</th>
                                                                     <th>Fiyat</th>
-                                                                    <th className="hide-mobile">Sıra</th>
                                                                     <th className="hide-tablet">Durum</th>
                                                                     <th></th>
                                                                 </tr>
