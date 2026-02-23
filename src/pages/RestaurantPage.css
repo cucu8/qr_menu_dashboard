@@ -144,12 +144,7 @@
     font-weight: 600;
     color: var(--accent-primary);
     text-decoration: none;
-    opacity: 0;
-    transition: opacity .15s, color .15s;
-}
-
-.rp-rest-item:hover .rp-menu-link {
-    opacity: 1;
+    transition: color .15s;
 }
 
 .rp-rest-item.active .rp-rest-name,
@@ -164,12 +159,8 @@
 }
 
 .rp-rest-actions {
-    display: none;
-    gap: 4px;
-}
-
-.rp-rest-item:hover .rp-rest-actions {
     display: flex;
+    gap: 4px;
 }
 
 /* ── Main panel ──────────────────────────────────────────── */
@@ -257,7 +248,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
-    background: var(--bg-secondary);
+    background: #e5e7eb;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -312,11 +303,12 @@
 .rp-table td {
     padding: 10px 14px;
     border-top: 1px solid var(--border-color);
+    background: #f3f4f6;
     vertical-align: middle;
 }
 
 .rp-table tr:hover td {
-    background: var(--bg-primary);
+    background: #e5e7eb;
 }
 
 .prod-thumb {
