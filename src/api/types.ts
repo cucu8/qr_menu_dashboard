@@ -1,6 +1,6 @@
 // Tüm backend entity tipleri — qr_dashboard_backend ile eşleşir
 
-const BASE_URL = 'http://localhost:5252';
+const BASE_URL = import.meta.env.PROD ? 'http://31.57.33.170:5000' : 'http://localhost:5252';
 export { BASE_URL };
 
 // ── Restaurant ────────────────────────────────────────────

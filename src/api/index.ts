@@ -7,7 +7,7 @@ import type {
     CreateProductDto, UpdateProductDto,
 } from './types';
 
-const BASE = 'http://localhost:5252/api';
+const BASE = import.meta.env.PROD ? 'http://31.57.33.170:5000/api' : 'http://localhost:5252/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const res = await fetch(`${BASE}${path}`, {
