@@ -8,17 +8,55 @@ import type {
 } from './types';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const BASE = isLocal ? 'http://localhost:5252/api' : 'http://31.57.33.170:5000/api';
+export const BASE_URL = isLocal ? 'http://localhost:5252' : 'http://31.57.33.170:5000';
+const BASE = `${BASE_URL}/api`;
+
+export function getToken() {
+    return localStorage.getItem('dashboard_token');
+}
+
+export function setToken(token: string) {
+    localStorage.setItem('dashboard_token', token);
+}
+
+export function logout() {
+    localStorage.removeItem('dashboard_token');
+    if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+    }
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+    const token = getToken();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(options?.headers as Record<string, string>),
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BASE}${path}`, {
-        headers: { 'Content-Type': 'application/json', ...options?.headers },
         ...options,
+        headers,
     });
+
+    if (res.status === 401) {
+        logout();
+        throw new Error('Yetkisiz erişim. Lütfen tekrar giriş yapın.');
+    }
+
     if (!res.ok) throw new Error(`API Error ${res.status}: ${await res.text()}`);
     if (res.status === 204) return undefined as T;
     return res.json();
 }
+
+// ── Auth ─────────────────────────────────────────────────────────────
+export const authApi = {
+    login: (body: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    seedAdmin: () => request<any>('/auth/seed-admin', { method: 'POST' }),
+    changePassword: (body: any) => request<{ message: string }>('/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+};
 
 // ── Restaurants ──────────────────────────────────────────────────────
 export const restaurantApi = {
@@ -80,7 +118,14 @@ export const uploadApi = {
     uploadImage: async (file: File): Promise<string> => {
         const form = new FormData();
         form.append('file', file);
-        const res = await fetch(`${BASE}/upload/image`, { method: 'POST', body: form });
+        const token = getToken();
+        const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const res = await fetch(`${BASE}/upload/image`, {
+            method: 'POST',
+            body: form,
+            headers
+        });
         if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
         const data: { url: string } = await res.json();
         return data.url;

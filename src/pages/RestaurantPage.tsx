@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { restaurantApi, categoryApi, productApi } from '../api';
+import { restaurantApi, categoryApi, productApi, logout } from '../api';
 import type {
     Restaurant, RestaurantWithMenu, MenuCategory, Product,
     CreateRestaurantDto, UpdateRestaurantDto,
@@ -9,6 +9,7 @@ import type {
 import RestaurantModal from '../components/modals/RestaurantModal';
 import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
+import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { BASE_URL, FRONTEND_URL } from '../api/types';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -81,6 +82,7 @@ export default function RestaurantPage() {
     const [restModal, setRestModal] = useState<{ open: boolean; target: Restaurant | null }>({ open: false, target: null });
     const [catModal, setCatModal] = useState<{ open: boolean; target: MenuCategory | null }>({ open: false, target: null });
     const [prodModal, setProdModal] = useState<{ open: boolean; target: Product | null; categoryId: string | null }>({ open: false, target: null, categoryId: null });
+    const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
 
     // ── Confirm delete ───────────────────────────────────────────────────
     const [confirm, setConfirm] = useState<{ message: string; onOk: () => void } | null>(null);
@@ -244,6 +246,8 @@ export default function RestaurantPage() {
                     <span>Restoranlar</span>
                     <div className="rp-sidebar-header-actions">
                         <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                        <button className="icon-btn" title="Şifre Değiştir" onClick={() => setChangePasswordModalOpen(true)}>🔑</button>
+                        <button className="icon-btn" title="Çıkış Yap" onClick={logout}>🚪</button>
                         <button className="icon-btn mobile-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
                     </div>
                 </div>
@@ -392,6 +396,12 @@ export default function RestaurantPage() {
                 product={prodModal.target}
                 onClose={() => setProdModal({ open: false, target: null, categoryId: null })}
                 onSave={handleSaveProduct}
+            />
+
+            {/* ── Change Password Modal ── */}
+            <ChangePasswordModal
+                isOpen={changePasswordModalOpen}
+                onClose={() => setChangePasswordModalOpen(false)}
             />
 
             {/* ── Confirm Dialog ───────────────────────────────────────────────── */}
