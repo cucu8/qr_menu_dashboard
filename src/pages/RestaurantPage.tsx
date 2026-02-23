@@ -10,7 +10,7 @@ import RestaurantModal from '../components/modals/RestaurantModal';
 import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
 import { BASE_URL, FRONTEND_URL } from '../api/types';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -23,7 +23,7 @@ function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts 
         <div ref={setNodeRef} style={style} className="rp-category">
             <div className="rp-cat-header">
                 <div className="rp-cat-title">
-                    <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', marginRight: '10px' }}>☰</span>
+                    <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', marginRight: '10px', touchAction: 'none' }}>☰</span>
                     {cat.photoUrl && <img className="rp-cat-photo" src={`${BASE_URL}${cat.photoUrl}`} alt="" />}
                     <span>{cat.name}</span>
                     <span className="rp-cat-count">{cat.products.length} ürün</span>
@@ -45,7 +45,7 @@ function SortableProductRow({ p, onEdit, onDelete }: any) {
     return (
         <tr ref={setNodeRef} style={style}>
             <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab' }}>☰</span>
+                <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', touchAction: 'none' }}>☰</span>
                 {p.photoUrl && (
                     <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
                 )}
@@ -185,6 +185,7 @@ export default function RestaurantPage() {
     // ── Drag and Drop Handlers ──────────────────────────────────────────
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
