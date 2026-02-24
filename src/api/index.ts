@@ -63,6 +63,7 @@ export const authApi = {
 export const userApi = {
     getAll: () => request<UserResponseDto[]>('/users'),
     create: (dto: CreateUserRequestDto) => request<UserResponseDto>('/users', { method: 'POST', body: JSON.stringify(dto) }),
+    resetPassword: (id: string) => request<{ message: string }>(`/users/${id}/reset-password`, { method: 'POST' }),
 };
 
 // ── Restaurants ──────────────────────────────────────────────────────
