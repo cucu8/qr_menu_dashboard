@@ -9,6 +9,7 @@ import type {
 import RestaurantModal from '../components/modals/RestaurantModal';
 import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
+import QrCodeModal from '../components/modals/QrCodeModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { BASE_URL, FRONTEND_URL } from '../api/types';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -93,6 +94,7 @@ export default function RestaurantPage() {
     const [restModal, setRestModal] = useState<{ open: boolean; target: Restaurant | null }>({ open: false, target: null });
     const [catModal, setCatModal] = useState<{ open: boolean; target: MenuCategory | null }>({ open: false, target: null });
     const [prodModal, setProdModal] = useState<{ open: boolean; target: Product | null; categoryId: string | null }>({ open: false, target: null, categoryId: null });
+    const [qrModal, setQrModal] = useState<{ open: boolean; target: Restaurant | null }>({ open: false, target: null });
     const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const navigate = useNavigate();
@@ -323,6 +325,9 @@ export default function RestaurantPage() {
                                     </a>
                                 </div>
                                 <div className="rp-rest-actions">
+                                    <button className="row-btn" title="QR Kod İndir" onClick={(e) => { e.stopPropagation(); setQrModal({ open: true, target: r }); }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+                                    </button>
                                     <button className="row-btn" title="Düzenle" onClick={(e) => { e.stopPropagation(); setRestModal({ open: true, target: r }); }}>✏️</button>
                                     {userRole === 'Admin' && (
                                         <button className="row-btn danger" title="Sil" onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(r); }}>🗑️</button>
@@ -436,6 +441,11 @@ export default function RestaurantPage() {
                 product={prodModal.target}
                 onClose={() => setProdModal({ open: false, target: null, categoryId: null })}
                 onSave={handleSaveProduct}
+            />
+            <QrCodeModal
+                isOpen={qrModal.open}
+                restaurant={qrModal.target}
+                onClose={() => setQrModal({ open: false, target: null })}
             />
 
             {/* ── Change Password Modal ── */}

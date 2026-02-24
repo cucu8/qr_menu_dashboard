@@ -9,8 +9,8 @@
 
 /* ── Sidebar ─────────────────────────────────────────────── */
 .rp-sidebar {
-    width: 280px;
-    min-width: 280px;
+    width: 300px;
+    min-width: 300px;
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -147,6 +147,7 @@
     color: var(--accent-primary);
     text-decoration: none;
     transition: color .15s;
+    white-space: nowrap;
 }
 
 .rp-rest-item.active .rp-rest-name,
@@ -163,6 +164,11 @@
 .rp-rest-actions {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
+}
+
+.rp-rest-actions .row-btn {
+    padding: 5px 8px;
 }
 
 /* ── Main panel ──────────────────────────────────────────── */
