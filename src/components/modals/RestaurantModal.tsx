@@ -65,7 +65,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay">
             <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>{restaurant ? 'Restoranı Düzenle' : 'Yeni Restoran'}</h2>

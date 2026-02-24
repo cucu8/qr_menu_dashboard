@@ -287,7 +287,6 @@ export default function RestaurantPage() {
                         )}
                         <button className="icon-btn" title="Şifre Değiştir" onClick={() => setChangePasswordModalOpen(true)}>🔑</button>
                         <button className="icon-btn" title="Çıkış Yap" onClick={logout}>🚪</button>
-                        <button className="icon-btn mobile-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
                     </div>
                 </div>
 
@@ -325,7 +324,9 @@ export default function RestaurantPage() {
                                 </div>
                                 <div className="rp-rest-actions">
                                     <button className="row-btn" title="Düzenle" onClick={(e) => { e.stopPropagation(); setRestModal({ open: true, target: r }); }}>✏️</button>
-                                    <button className="row-btn danger" title="Sil" onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(r); }}>🗑️</button>
+                                    {userRole === 'Admin' && (
+                                        <button className="row-btn danger" title="Sil" onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(r); }}>🗑️</button>
+                                    )}
                                 </div>
                             </li>
                         ))}
