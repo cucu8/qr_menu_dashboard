@@ -13,11 +13,16 @@ function PrivateRoute({ children }: { children: React.ReactElement }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
+function PublicRoute({ children }: { children: React.ReactElement }) {
+  const token = getToken();
+  return token ? <Navigate to="/" replace /> : children;
+}
+
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/" element={<PrivateRoute><RestaurantPage /></PrivateRoute>} />
         <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
