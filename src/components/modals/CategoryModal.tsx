@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { MenuCategory, CreateMenuCategoryDto, UpdateMenuCategoryDto } from '../../api/types';
+import { uploadApi } from '../../api';
 import ImageUpload from './ImageUpload';
 import './Modal.css';
 
@@ -10,12 +11,16 @@ interface CategoryModalProps {
     onSave: (data: CreateMenuCategoryDto | UpdateMenuCategoryDto, id?: string) => Promise<void>;
 }
 
-const empty = (): CreateMenuCategoryDto => ({
+interface FormState extends Omit<CreateMenuCategoryDto, 'photoUrl'> {
+    photoUrl: string | File | undefined;
+}
+
+const empty = (): FormState => ({
     name: '', description: '', photoUrl: undefined, displayOrder: 0,
 });
 
 export default function CategoryModal({ isOpen, category, onClose, onSave }: CategoryModalProps) {
-    const [form, setForm] = useState<CreateMenuCategoryDto>(empty());
+    const [form, setForm] = useState<FormState>(empty());
     const [isActive, setIsActive] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -44,7 +49,13 @@ export default function CategoryModal({ isOpen, category, onClose, onSave }: Cat
         setSaving(true);
         setError(null);
         try {
-            const dto = category ? ({ ...form, isActive } as UpdateMenuCategoryDto) : form;
+            let photoUrl = typeof form.photoUrl === 'string' ? form.photoUrl : undefined;
+            if (form.photoUrl instanceof File) {
+                photoUrl = await uploadApi.uploadImage(form.photoUrl);
+            }
+
+            const finalData = { ...form, photoUrl };
+            const dto = category ? ({ ...finalData, isActive } as UpdateMenuCategoryDto) : finalData as CreateMenuCategoryDto;
             await onSave(dto, category?.id);
             onClose();
         } catch {

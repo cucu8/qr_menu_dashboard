@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product, CreateProductDto, UpdateProductDto } from '../../api/types';
+import { uploadApi } from '../../api';
 import ImageUpload from './ImageUpload';
 import './Modal.css';
 
@@ -10,12 +11,16 @@ interface ProductModalProps {
     onSave: (data: CreateProductDto | UpdateProductDto, id?: string) => Promise<void>;
 }
 
-const empty = (): CreateProductDto => ({
+interface FormState extends Omit<CreateProductDto, 'photoUrl'> {
+    photoUrl: string | File | undefined;
+}
+
+const empty = (): FormState => ({
     name: '', description: '', price: 0, photoUrl: undefined, displayOrder: 0,
 });
 
 export default function ProductModal({ isOpen, product, onClose, onSave }: ProductModalProps) {
-    const [form, setForm] = useState<CreateProductDto>(empty());
+    const [form, setForm] = useState<FormState>(empty());
     const [priceStr, setPriceStr] = useState('0');
     const [orderStr, setOrderStr] = useState('0');
     const [isAvailable, setIsAvailable] = useState(true);
@@ -54,8 +59,13 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
         setSaving(true);
         setError(null);
         try {
-            const finalForm = { ...form, price, displayOrder: isNaN(displayOrder) ? 0 : displayOrder };
-            const dto = product ? ({ ...finalForm, isAvailable } as UpdateProductDto) : finalForm;
+            let photoUrl = typeof form.photoUrl === 'string' ? form.photoUrl : undefined;
+            if (form.photoUrl instanceof File) {
+                photoUrl = await uploadApi.uploadImage(form.photoUrl);
+            }
+
+            const finalForm = { ...form, price, displayOrder: isNaN(displayOrder) ? 0 : displayOrder, photoUrl };
+            const dto = product ? ({ ...finalForm, isAvailable } as UpdateProductDto) : finalForm as CreateProductDto;
             await onSave(dto, product?.id);
             onClose();
         } catch {
