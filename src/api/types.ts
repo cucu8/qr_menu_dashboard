@@ -1,7 +1,7 @@
 // Tüm backend entity tipleri — qr_dashboard_backend ile eşleşir
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const BASE_URL = isLocal ? 'http://localhost:5252' : 'http://31.57.33.170';
+const BASE_URL = isLocal ? 'http://localhost:5252' : 'http://31.57.33.170:8080';
 // Canlı ortamda QR tarafının yayınlandığı domain (Örn: qr.sizin-domain.com ya da direkt 31.57.33.170)
 // Eğer özel bir domaininiz varsa buraya onu yazın, şimdilik mevcut IP'yi veya domaini alacak şekilde dinamik yapabiliriz.
 const FRONTEND_URL = isLocal ? 'http://localhost:3000' : 'http://31.57.33.170'; // CANLI ORTAM QR DOMAINI BURAYA GELECEK
