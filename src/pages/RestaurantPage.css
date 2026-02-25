@@ -93,6 +93,20 @@
     color: white;
 }
 
+.rp-rest-item.is-deleted {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.rp-rest-item.is-deleted:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.rp-rest-item.is-deleted.active {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
 .rp-rest-logo {
     width: 36px;
     height: 36px;

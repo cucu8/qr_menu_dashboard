@@ -30,7 +30,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                 phone: restaurant.phone ?? '',
                 address: restaurant.address ?? '',
             });
-            setIsActive(restaurant.isActive);
+            setIsActive(!restaurant.isDeleted);
         } else {
             setForm(empty());
             setOwner({ username: '', email: '', password: '' });

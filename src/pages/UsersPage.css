@@ -66,6 +66,25 @@
     color: var(--accent-primary);
 }
 
+.btn-add {
+    background: var(--accent-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add:hover {
+    background: var(--accent-secondary);
+}
+
 .users-content {
     flex: 1;
     overflow-y: auto;

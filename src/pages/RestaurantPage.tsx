@@ -148,7 +148,18 @@ export default function RestaurantPage() {
     // ── Restaurant CRUD ───────────────────────────────────────────────────
     const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => {
         if (id) {
-            await restaurantApi.update(id, dto as UpdateRestaurantDto);
+            const updateDto = dto as UpdateRestaurantDto;
+            await restaurantApi.update(id, updateDto);
+
+            // Check if status changed (Active/Passive toggle)
+            const current = restaurants.find(r => r.id === id);
+            if (current) {
+                const newIsDeleted = !updateDto.isActive; // Passive = Deleted
+                if (current.isDeleted !== newIsDeleted) {
+                    if (newIsDeleted) await restaurantApi.softDelete(id);
+                    else await restaurantApi.restore(id);
+                }
+            }
         } else {
             const newRest = await restaurantApi.create(dto as CreateRestaurantDto);
             if (ownerDetails && ownerDetails.username && ownerDetails.password) {
@@ -173,7 +184,7 @@ export default function RestaurantPage() {
         setConfirm({
             message: `"${r.name}" silinecek. Emin misin?`,
             onOk: async () => {
-                await restaurantApi.softDelete(r.id);
+                await restaurantApi.hardDelete(r.id);
                 if (selectedRest?.id === r.id) setSelectedRest(null);
                 await loadRestaurants();
                 setConfirm(null);
@@ -301,7 +312,7 @@ export default function RestaurantPage() {
                         {restaurants.map((r) => (
                             <li
                                 key={r.id}
-                                className={`rp-rest-item ${selectedRest?.id === r.id ? 'active' : ''}`}
+                                className={`rp-rest-item ${selectedRest?.id === r.id ? 'active' : ''} ${r.isDeleted ? 'is-deleted' : ''}`}
                                 onClick={() => {
                                     loadMenu(r.id);
                                     setIsSidebarOpen(false); // Mobil menüde seçince kapat
@@ -311,7 +322,10 @@ export default function RestaurantPage() {
                                     {r.logoUrl ? <img src={`${BASE_URL}${r.logoUrl}`} alt="" /> : '🏪'}
                                 </div>
                                 <div className="rp-rest-info">
-                                    <span className="rp-rest-name">{r.name}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span className="rp-rest-name">{r.name}</span>
+                                        {r.isDeleted && <span className="badge badge-red" style={{ fontSize: '10px', padding: '2px 6px' }}>Pasif</span>}
+                                    </div>
                                     {r.address && <span className="rp-rest-addr">{r.address}</span>}
                                     <a
                                         className="rp-menu-link"
