@@ -4,7 +4,7 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 const BASE_URL = isLocal ? 'http://localhost:5252' : 'http://api.htreklam.com';
 // Canlı ortamda QR tarafının yayınlandığı domain (Örn: qr.sizin-domain.com ya da direkt 31.57.33.170)
 // Eğer özel bir domaininiz varsa buraya onu yazın, şimdilik mevcut IP'yi veya domaini alacak şekilde dinamik yapabiliriz.
-const FRONTEND_URL = isLocal ? 'http://localhost:3000' : 'http://31.57.33.170:3002'; // CANLI ORTAM QR DOMAINI BURAYA GELECEK
+const FRONTEND_URL = isLocal ? 'http://localhost:3000' : 'http://qrmenu.htreklam.com'; // CANLI ORTAM QR DOMAINI BURAYA GELECEK
 export { BASE_URL, FRONTEND_URL };
 
 // ── Restaurant ────────────────────────────────────────────
