@@ -9,7 +9,7 @@ import type {
 } from './types';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-export const BASE_URL = isLocal ? 'http://localhost:5252' : 'http://api.htreklam.com';
+export const BASE_URL = isLocal ? 'http://localhost:5252' : 'https://api.htreklam.com';
 const BASE = `${BASE_URL}/api`;
 
 export function getToken() {
