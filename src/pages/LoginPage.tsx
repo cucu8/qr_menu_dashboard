@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi, setToken } from '../api';
+import { authApi } from '../api';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -16,7 +16,7 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const res = await authApi.login({ email, password });
-            setToken(res.token);
+            localStorage.setItem('dashboard_token', res.token);
             navigate('/');
         } catch (err: any) {
             setError(err.message || 'Giriş başarısız, lütfen bilgilerinizi kontrol edin.');

@@ -16,7 +16,6 @@ export interface Restaurant {
   phone: string | null;
   address: string | null;
   isActive: boolean;
-  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,7 +50,7 @@ export interface Product {
   price: number;
   photoUrl: string | null;
   displayOrder: number;
-  isAvailable: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,7 +88,7 @@ export interface CreateProductDto {
 }
 
 export interface UpdateProductDto extends CreateProductDto {
-  isAvailable: boolean;
+  isActive: boolean;
 }
 
 // ── Users ─────────────────────────────────────────────────────

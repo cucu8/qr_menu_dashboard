@@ -97,7 +97,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                     logoUrl: restaurant.logoUrl ?? undefined,
                     phone: restaurant.phone ?? '',
                     address: restaurant.address ?? '',
-                    isActive: !restaurant.isDeleted,
+                    isActive: restaurant.isActive,
                     ownerUsername: '',
                     ownerEmail: '',
                     ownerPassword: ''

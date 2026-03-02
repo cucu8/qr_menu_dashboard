@@ -8,55 +8,37 @@ import type {
     UserResponseDto, CreateUserRequestDto,
 } from './types';
 
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-export const BASE_URL = isLocal ? 'http://localhost:5252' : 'https://api.htreklam.com';
-const BASE = `${BASE_URL}/api`;
+import { BASE_URL } from './types';
+export { BASE_URL };
 
-export function getToken() {
-    return localStorage.getItem('dashboard_token');
-}
+export const getToken = () => localStorage.getItem('dashboard_token');
 
-export function setToken(token: string) {
-    localStorage.setItem('dashboard_token', token);
-}
-
-export function logout() {
-    localStorage.removeItem('dashboard_token');
-    if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-    }
-}
-
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
     const token = getToken();
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...(options?.headers as Record<string, string>),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init.headers as Record<string, string> || {}),
     };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${BASE_URL}/api${path}`, { ...init, headers });
+    if (!res.ok) {
+        const text = await res.text().catch(() => res.statusText);
+        throw new Error(`API ${res.status}: ${text}`);
     }
-
-    const res = await fetch(`${BASE}${path}`, {
-        ...options,
-        headers,
-    });
-
-    if (res.status === 401) {
-        logout();
-        throw new Error('Yetkisiz erişim. Lütfen tekrar giriş yapın.');
-    }
-
-    if (!res.ok) throw new Error(`API Error ${res.status}: ${await res.text()}`);
-    if (res.status === 204) return undefined as T;
+    if (res.status === 204) return undefined as unknown as T;
     return res.json();
-}
+};
 
 // ── Auth ─────────────────────────────────────────────────────────────
 export const authApi = {
     login: (body: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     seedAdmin: () => request<any>('/auth/seed-admin', { method: 'POST' }),
     changePassword: (body: any) => request<{ message: string }>('/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+export const logout = () => {
+    localStorage.removeItem('dashboard_token');
+    window.location.href = '/login';
 };
 
 // ── Users ────────────────────────────────────────────────────────────
@@ -75,12 +57,8 @@ export const restaurantApi = {
         request<Restaurant>('/restaurants', { method: 'POST', body: JSON.stringify(dto) }),
     update: (id: string, dto: UpdateRestaurantDto) =>
         request<Restaurant>(`/restaurants/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
-    softDelete: (id: string) =>
+    delete: (id: string) =>
         request<void>(`/restaurants/${id}`, { method: 'DELETE' }),
-    hardDelete: (id: string) =>
-        request<void>(`/restaurants/${id}/hard`, { method: 'DELETE' }),
-    restore: (id: string) =>
-        request<void>(`/restaurants/${id}/restore`, { method: 'POST' }),
 };
 
 // ── Menu Categories ───────────────────────────────────────────────────
@@ -94,10 +72,8 @@ export const categoryApi = {
         }),
     update: (id: string, dto: UpdateMenuCategoryDto) =>
         request<MenuCategory>(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
-    softDelete: (id: string) =>
+    delete: (id: string) =>
         request<void>(`/categories/${id}`, { method: 'DELETE' }),
-    hardDelete: (id: string) =>
-        request<void>(`/categories/${id}/hard`, { method: 'DELETE' }),
     reorder: (restaurantId: string, updates: { id: string, displayOrder: number }[]) =>
         request<void>(`/restaurants/${restaurantId}/categories/reorder`, { method: 'PUT', body: JSON.stringify(updates) }),
 };
@@ -113,10 +89,8 @@ export const productApi = {
         }),
     update: (id: string, dto: UpdateProductDto) =>
         request<Product>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
-    softDelete: (id: string) =>
+    delete: (id: string) =>
         request<void>(`/products/${id}`, { method: 'DELETE' }),
-    hardDelete: (id: string) =>
-        request<void>(`/products/${id}/hard`, { method: 'DELETE' }),
     reorder: (categoryId: string, updates: { id: string, displayOrder: number }[]) =>
         request<void>(`/categories/${categoryId}/products/reorder`, { method: 'PUT', body: JSON.stringify(updates) }),
 };
@@ -129,7 +103,7 @@ export const uploadApi = {
         const token = getToken();
         const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        const res = await fetch(`${BASE}/upload/image`, {
+        const res = await fetch(`${BASE_URL}/upload/image`, {
             method: 'POST',
             body: form,
             headers

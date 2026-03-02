@@ -265,6 +265,15 @@
     flex-shrink: 0;
 }
 
+.rp-category.rp-category-inactive {
+    background: rgba(239, 68, 68, 0.04);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.rp-category.rp-category-inactive .rp-cat-header {
+    background: rgba(239, 68, 68, 0.1);
+}
+
 .rp-cat-header {
     display: flex;
     align-items: center;
@@ -320,17 +329,31 @@
     text-transform: uppercase;
     letter-spacing: .5px;
     padding: 10px 14px 8px;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .rp-table td {
     padding: 10px 14px;
-    border-top: 1px solid var(--border-color);
     background: #f3f4f6;
     vertical-align: middle;
 }
 
+/* Satır arası ayırıcı — ilk satır dahil değil */
+.rp-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--border-color);
+}
+
 .rp-table tr:hover td {
     background: #e5e7eb;
+}
+
+/* Pasif ürün satırı — kırmızı arka plan */
+.rp-table tr.product-row-inactive td {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.rp-table tr.product-row-inactive:hover td {
+    background: rgba(239, 68, 68, 0.15);
 }
 
 .prod-thumb {

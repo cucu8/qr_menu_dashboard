@@ -23,7 +23,7 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
     const [form, setForm] = useState<FormState>(empty());
     const [priceStr, setPriceStr] = useState('0');
     const [orderStr, setOrderStr] = useState('0');
-    const [isAvailable, setIsAvailable] = useState(true);
+    const [isActive, setIsActive] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,12 +38,12 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
             });
             setPriceStr(String(product.price));
             setOrderStr(String(product.displayOrder));
-            setIsAvailable(product.isAvailable);
+            setIsActive(product.isActive);
         } else {
             setForm(empty());
             setPriceStr('0');
             setOrderStr('0');
-            setIsAvailable(true);
+            setIsActive(true);
         }
         setError(null);
     }, [product, isOpen]);
@@ -65,7 +65,7 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
             }
 
             const finalForm = { ...form, price, displayOrder: isNaN(displayOrder) ? 0 : displayOrder, photoUrl };
-            const dto = product ? ({ ...finalForm, isAvailable } as UpdateProductDto) : finalForm as CreateProductDto;
+            const dto = product ? ({ ...finalForm, isActive } as UpdateProductDto) : finalForm as CreateProductDto;
             await onSave(dto, product?.id);
             onClose();
         } catch {
@@ -128,8 +128,8 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
                     {product && (
                         <div className="form-toggle">
                             <label className="toggle-label">
-                                <input type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
-                                <span>Stokta mevcut</span>
+                                <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+                                <span>Aktif</span>
                             </label>
                         </div>
                     )}

@@ -33,13 +33,14 @@ function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts 
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: cat.id });
     const style = { transform: CSS.Transform.toString(transform), transition };
     return (
-        <div ref={setNodeRef} style={style} className="rp-category">
+        <div ref={setNodeRef} style={style} className={`rp-category ${!cat.isActive ? 'rp-category-inactive' : ''}`}>
             <div className="rp-cat-header">
                 <div className="rp-cat-title">
                     <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', marginRight: '10px', touchAction: 'none' }}>☰</span>
                     {cat.photoUrl && <img className="rp-cat-photo" src={`${BASE_URL}${cat.photoUrl}`} alt="" />}
                     <span>{cat.name}</span>
                     <span className="rp-cat-count">{cat.products.length} ürün</span>
+                    {!cat.isActive && <span className="badge badge-red" style={{ fontSize: '11px', padding: '2px 8px' }}>Pasif</span>}
                 </div>
                 <div className="rp-cat-actions">
                     <button className="row-btn" onClick={() => onEdit(cat)}>✏️ Düzenle</button>
@@ -56,11 +57,11 @@ function SortableProductRow({ p, onEdit, onDelete }: { p: Product, onEdit: (p: P
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: p.id });
     const style = { transform: CSS.Transform.toString(transform) ? CSS.Transform.toString(transform)?.replace(/Y\((.*?)\)/, 'Y($1)') : undefined, transition };
     return (
-        <tr ref={setNodeRef} style={style}>
+        <tr ref={setNodeRef} style={style} className={!p.isActive ? 'product-row-inactive' : ''}>
             <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', touchAction: 'none' }}>☰</span>
                 {p.photoUrl && (
-                    <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" />
+                    <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 )}
             </td>
             <td>
@@ -69,8 +70,8 @@ function SortableProductRow({ p, onEdit, onDelete }: { p: Product, onEdit: (p: P
             </td>
             <td className="prod-price">₺{p.price.toFixed(2)}</td>
             <td className="hide-tablet">
-                <span className={`badge ${p.isAvailable ? 'badge-green' : 'badge-red'}`}>
-                    {p.isAvailable ? 'Mevcut' : 'Tükendi'}
+                <span className={`badge ${p.isActive ? 'badge-green' : 'badge-red'}`}>
+                    {p.isActive ? 'Aktif' : 'Pasif'}
                 </span>
             </td>
             <td>
@@ -148,18 +149,7 @@ export default function RestaurantPage() {
     // ── Restaurant CRUD ───────────────────────────────────────────────────
     const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => {
         if (id) {
-            const updateDto = dto as UpdateRestaurantDto;
-            await restaurantApi.update(id, updateDto);
-
-            // Check if status changed (Active/Passive toggle)
-            const current = restaurants.find(r => r.id === id);
-            if (current) {
-                const newIsDeleted = !updateDto.isActive; // Passive = Deleted
-                if (current.isDeleted !== newIsDeleted) {
-                    if (newIsDeleted) await restaurantApi.softDelete(id);
-                    else await restaurantApi.restore(id);
-                }
-            }
+            await restaurantApi.update(id, dto as UpdateRestaurantDto);
         } else {
             const newRest = await restaurantApi.create(dto as CreateRestaurantDto);
             if (ownerDetails && ownerDetails.username && ownerDetails.password) {
@@ -182,9 +172,9 @@ export default function RestaurantPage() {
 
     const handleDeleteRestaurant = (r: Restaurant) => {
         setConfirm({
-            message: `"${r.name}" silinecek. Emin misin?`,
+            message: `"${r.name}" kalıcı olarak silinecek. Emin misin?`,
             onOk: async () => {
-                await restaurantApi.hardDelete(r.id);
+                await restaurantApi.delete(r.id);
                 if (selectedRest?.id === r.id) setSelectedRest(null);
                 await loadRestaurants();
                 setConfirm(null);
@@ -201,9 +191,9 @@ export default function RestaurantPage() {
 
     const handleDeleteCategory = (c: MenuCategory) => {
         setConfirm({
-            message: `"${c.name}" kategorisi silinecek. İçindeki ürünler de silinir!`,
+            message: `"${c.name}" kategorisi kalıcı olarak silinecek. İçindeki ürünler de silinir!`,
             onOk: async () => {
-                await categoryApi.softDelete(c.id);
+                await categoryApi.delete(c.id);
                 if (selectedRest) await loadMenu(selectedRest.id);
                 setConfirm(null);
             },
@@ -219,9 +209,9 @@ export default function RestaurantPage() {
 
     const handleDeleteProduct = (p: Product) => {
         setConfirm({
-            message: `"${p.name}" silinecek. Emin misin?`,
+            message: `"${p.name}" kalıcı olarak silinecek. Emin misin?`,
             onOk: async () => {
-                await productApi.softDelete(p.id);
+                await productApi.delete(p.id);
                 if (selectedRest) await loadMenu(selectedRest.id);
                 setConfirm(null);
             },
@@ -312,7 +302,7 @@ export default function RestaurantPage() {
                         {restaurants.map((r) => (
                             <li
                                 key={r.id}
-                                className={`rp-rest-item ${selectedRest?.id === r.id ? 'active' : ''} ${r.isDeleted ? 'is-deleted' : ''}`}
+                                className={`rp-rest-item ${selectedRest?.id === r.id ? 'active' : ''} ${!r.isActive ? 'is-deleted' : ''}`}
                                 onClick={() => {
                                     loadMenu(r.id);
                                     setIsSidebarOpen(false); // Mobil menüde seçince kapat
@@ -324,7 +314,7 @@ export default function RestaurantPage() {
                                 <div className="rp-rest-info">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span className="rp-rest-name">{r.name}</span>
-                                        {r.isDeleted && <span className="badge badge-red" style={{ fontSize: '10px', padding: '2px 6px' }}>Pasif</span>}
+                                        {!r.isActive && <span className="badge badge-red" style={{ fontSize: '10px', padding: '2px 6px' }}>Pasif</span>}
                                     </div>
                                     {r.address && <span className="rp-rest-addr">{r.address}</span>}
                                     <a
@@ -398,20 +388,20 @@ export default function RestaurantPage() {
                                                 onDelete={handleDeleteCategory}
                                                 onAddProduct={(c: MenuCategory) => setProdModal({ open: true, target: null, categoryId: c.id })}
                                                 renderProducts={() => (
-                                                    <div className="rp-table-wrapper">
-                                                        <table className="rp-table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Ürün</th>
-                                                                    <th>Detay</th>
-                                                                    <th>Fiyat</th>
-                                                                    <th className="hide-tablet">Durum</th>
-                                                                    <th></th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleProductDragEnd(cat.id, e)}>
-                                                                    <SortableContext items={cat.products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleProductDragEnd(cat.id, e)}>
+                                                        <SortableContext items={cat.products.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                                                            <div className="rp-table-wrapper">
+                                                                <table className="rp-table">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Ürün</th>
+                                                                            <th>Detay</th>
+                                                                            <th>Fiyat</th>
+                                                                            <th className="hide-tablet">Durum</th>
+                                                                            <th></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
                                                                         {cat.products.map((p) => (
                                                                             <SortableProductRow
                                                                                 key={p.id}
@@ -420,11 +410,11 @@ export default function RestaurantPage() {
                                                                                 onDelete={handleDeleteProduct}
                                                                             />
                                                                         ))}
-                                                                    </SortableContext>
-                                                                </DndContext>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </SortableContext>
+                                                    </DndContext>
                                                 )}
                                             />
                                         ))}
