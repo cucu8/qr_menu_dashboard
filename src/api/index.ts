@@ -103,7 +103,7 @@ export const uploadApi = {
         const token = getToken();
         const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        const res = await fetch(`${BASE_URL}/upload/image`, {
+        const res = await fetch(`${BASE_URL}/api/upload/image`, {
             method: 'POST',
             body: form,
             headers
