@@ -50,13 +50,12 @@ export default function UsersPage() {
         <div className="users-page">
             <header className="users-header">
                 <div className="users-header-left">
-                    <button className="btn-back" onClick={() => navigate(-1)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                        Geri Dön
+                    <button className="btn-back" onClick={() => navigate(-1)} title="Geri Dön">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                     </button>
                     <div className="users-header-info">
                         <h1>Kullanıcı Yönetimi</h1>
-                        <p>Sisteme erişimi olan kullanıcıları yönetin ve restoran atamalarını yapın.</p>
+                        <p>Sisteme erişimi olan kullanıcıları yönetin.</p>
                     </div>
                 </div>
             </header>
@@ -73,10 +72,10 @@ export default function UsersPage() {
                                 <thead>
                                     <tr>
                                         <th>Kullanıcı Adı</th>
-                                        <th>E-posta</th>
-                                        <th>Rol</th>
-                                        <th>Atanan Restoran</th>
-                                        <th>İşlemler</th>
+                                        <th>Telefon</th>
+                                        <th className="hide-mobile-cell">Rol</th>
+                                        <th className="hide-mobile-cell">Atanan Restoran</th>
+                                        <th style={{ textAlign: 'right' }}>İşlemler</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -89,18 +88,24 @@ export default function UsersPage() {
                                     ) : (
                                         users.map(user => (
                                             <tr key={user.id}>
-                                                <td>{user.username}</td>
-                                                <td>{user.email}</td>
                                                 <td>
+                                                    <div className="user-name-cell">{user.username}</div>
+                                                </td>
+                                                <td>
+                                                    <div className="user-phone-cell">{user.phoneNumber}</div>
+                                                </td>
+                                                <td className="hide-mobile-cell">
                                                     <span className={`user-role-badge ${user?.role?.toLowerCase() || ''}`}>
-                                                        {user.role}
+                                                        {user.role === 'Admin' ? 'Yönetici' : 'Sahip'}
                                                     </span>
                                                 </td>
-                                                <td>{user.restaurantName || '-'}</td>
+                                                <td className="hide-mobile-cell">
+                                                    <div className="user-rest-cell">{user.restaurantName || '-'}</div>
+                                                </td>
                                                 <td>
-                                                    <div className="table-actions">
+                                                    <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
                                                         <button
-                                                            className="btn-icon-edit"
+                                                            className="btn-action"
                                                             title="Düzenle"
                                                             onClick={() => console.log('Edit user:', user)}
                                                         >
@@ -108,10 +113,10 @@ export default function UsersPage() {
                                                                 <path d="M12 20h9"></path>
                                                                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                                             </svg>
+                                                            <span>Düzenle</span>
                                                         </button>
                                                         <button
-                                                            className="btn-icon-edit"
-                                                            style={{ color: 'var(--danger)' }}
+                                                            className="btn-action danger"
                                                             title="Şifreyi Sıfırla (123456)"
                                                             onClick={() => handleResetPasswordClick(user)}
                                                         >
@@ -120,6 +125,7 @@ export default function UsersPage() {
                                                                 <path d="M14 8c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2Z"></path>
                                                                 <path d="m14 8 7-7"></path>
                                                             </svg>
+                                                            <span>Şifre Sıfırla</span>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -137,10 +143,16 @@ export default function UsersPage() {
             {confirmModal.open && confirmModal.user && (
                 <div className="modal-overlay" onClick={() => setConfirmModal({ open: false, user: null })}>
                     <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-                        <p><strong>{confirmModal.user.username}</strong> kullanıcısının şifresi "123456" olarak sıfırlanacak. Onaylıyor musunuz?</p>
+                        <div className="confirm-icon-box warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4c.1-.1.1-.3.1-.4l1.2-1.2h2.6c.1 0 .2-.1.3-.1l1.4-1.4c.1-.1.1-.3.1-.4V7.8c0-.1-.1-.2-.1-.3l-1.4-1.4c-.1-.1-.3-.1-.4-.1h-3.2c-.1 0-.3.1-.4.1L12.8 8c-.1.1-.1.3-.1.4v2.6l-1.2 1.2c-.1.1-.1.2-.1.3V15H8l-6 6"></path><circle cx="18" cy="6" r="2"></circle></svg>
+                        </div>
+                        <div className="confirm-title">Şifre Sıfırlansın mı?</div>
+                        <p className="confirm-message">
+                            <strong>{confirmModal.user.username}</strong> kullanıcısının şifresi "123456" olarak sıfırlanacak.
+                        </p>
                         <div className="confirm-actions">
-                            <button className="btn btn-ghost" onClick={() => setConfirmModal({ open: false, user: null })}>İptal</button>
-                            <button className="btn btn-danger" onClick={confirmResetPassword}>Evet, Sıfırla</button>
+                            <button className="btn-confirm cancel" onClick={() => setConfirmModal({ open: false, user: null })}>Vazgeç</button>
+                            <button className="btn-confirm primary" onClick={confirmResetPassword}>Evet, Sıfırla</button>
                         </div>
                     </div>
                 </div>

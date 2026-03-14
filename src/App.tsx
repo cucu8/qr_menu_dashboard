@@ -18,13 +18,15 @@ function PublicRoute({ children }: { children: React.ReactElement }) {
   return token ? <Navigate to="/" replace /> : children;
 }
 
+import MainLayout from './components/layout/MainLayout';
+
 function App() {
   return (
     <>
       <Routes>
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-        <Route path="/" element={<PrivateRoute><RestaurantPage /></PrivateRoute>} />
-        <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
+        <Route path="/" element={<PrivateRoute><MainLayout><RestaurantPage /></MainLayout></PrivateRoute>} />
+        <Route path="/users" element={<PrivateRoute><MainLayout><UsersPage /></MainLayout></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer position="bottom-right" autoClose={3000} theme="colored" />

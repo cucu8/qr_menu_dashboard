@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { restaurantApi, categoryApi, productApi, logout, userApi } from '../api';
+import { restaurantApi, categoryApi, productApi, userApi } from '../api';
 import type {
     Restaurant, RestaurantWithMenu, MenuCategory, Product,
     CreateRestaurantDto, UpdateRestaurantDto,
@@ -11,14 +11,13 @@ import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
 import QrCodeModal from '../components/modals/QrCodeModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { BASE_URL, FRONTEND_URL } from '../api/types';
+import { BASE_URL } from '../api/types';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import './RestaurantPage.css';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
 
 interface DecodedToken {
     nameid?: string;
@@ -76,8 +75,14 @@ function SortableProductRow({ p, onEdit, onDelete }: { p: Product, onEdit: (p: P
             </td>
             <td>
                 <div className="prod-actions">
-                    <button className="row-btn" onClick={() => onEdit(p)}>✏️</button>
-                    <button className="row-btn danger" onClick={() => onDelete(p)}>🗑️</button>
+                    <button className="row-btn" onClick={() => onEdit(p)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <span>Düzenle</span>
+                    </button>
+                    <button className="row-btn danger" onClick={() => onDelete(p)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        <span>Sil</span>
+                    </button>
                 </div>
             </td>
         </tr>
@@ -98,7 +103,6 @@ export default function RestaurantPage() {
     const [qrModal, setQrModal] = useState<{ open: boolean; target: Restaurant | null }>({ open: false, target: null });
     const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
-    const navigate = useNavigate();
 
     // ── Confirm delete ───────────────────────────────────────────────────
     const [confirm, setConfirm] = useState<{ message: string; onOk: () => void } | null>(null);
@@ -147,7 +151,7 @@ export default function RestaurantPage() {
     }, []);
 
     // ── Restaurant CRUD ───────────────────────────────────────────────────
-    const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => {
+    const handleSaveRestaurant = async (dto: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; phoneNumber: string; email?: string; password: string }) => {
         if (id) {
             await restaurantApi.update(id, dto as UpdateRestaurantDto);
         } else {
@@ -156,7 +160,7 @@ export default function RestaurantPage() {
                 try {
                     await userApi.create({
                         username: ownerDetails.username,
-                        email: ownerDetails.email,
+                        phoneNumber: ownerDetails.phoneNumber,
                         password: ownerDetails.password,
                         role: 'Owner',
                         restaurantId: newRest.id
@@ -272,25 +276,25 @@ export default function RestaurantPage() {
         }
     };
 
+    // ── Sidebar State Sync ──────────────────────────────────────────────
+    useEffect(() => {
+        const handleToggle = () => setIsSidebarOpen(prev => !prev);
+        window.addEventListener('toggle-sidebar', handleToggle);
+        return () => window.removeEventListener('toggle-sidebar', handleToggle);
+    }, []);
+
     return (
         <div className={`rp ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             {/* ── Mobile Sidebar Overlay ── */}
             {isSidebarOpen && <div className="rp-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
 
             {/* ── Left sidebar: restaurant list ───────────────────────────── */}
-            <aside className="rp-sidebar">
+            <aside className={`rp-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="rp-sidebar-header">
-                    <span>Restoranlar</span>
-                    <div className="rp-sidebar-header-actions">
-                        {userRole === 'Admin' && (
-                            <>
-                                <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
-                                <button className="icon-btn" title="Kullanıcı Yönetimi" onClick={() => navigate('/users')}>👥</button>
-                            </>
-                        )}
-                        <button className="icon-btn" title="Şifre Değiştir" onClick={() => setChangePasswordModalOpen(true)}>🔑</button>
-                        <button className="icon-btn" title="Çıkış Yap" onClick={logout}>🚪</button>
-                    </div>
+                    <span>Restoranlarım</span>
+                    {userRole === 'Admin' && (
+                        <button className="icon-btn" title="Yeni restoran" onClick={() => setRestModal({ open: true, target: null })}>＋</button>
+                    )}
                 </div>
 
                 {loading ? (
@@ -308,49 +312,42 @@ export default function RestaurantPage() {
                                     setIsSidebarOpen(false); // Mobil menüde seçince kapat
                                 }}
                             >
-                                <div className="rp-rest-logo">
-                                    {r.logoUrl ? <img src={`${BASE_URL}${r.logoUrl}`} alt="" /> : '🏪'}
-                                </div>
-                                <div className="rp-rest-info">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span className="rp-rest-name">{r.name}</span>
-                                        {!r.isActive && <span className="badge badge-red" style={{ fontSize: '10px', padding: '2px 6px' }}>Pasif</span>}
+                                <div className="rp-item-top">
+                                    <div className="rp-rest-logo">
+                                        {r.logoUrl ? <img src={`${BASE_URL}${r.logoUrl}`} alt="" /> : '🏪'}
                                     </div>
-                                    {r.address && <span className="rp-rest-addr">{r.address}</span>}
-                                    <a
-                                        className="rp-menu-link"
-                                        href={`${FRONTEND_URL}/${r.id}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        title="QR Menüyü önizle"
-                                    >
-                                        🔗 Menüyü Gör
-                                    </a>
+                                    <div className="rp-rest-info">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span className="rp-rest-name">{r.name}</span>
+                                            {!r.isActive && <span className="badge badge-red" style={{ fontSize: '10px', padding: '2px 6px' }}>Pasif</span>}
+                                        </div>
+                                        {r.address && <span className="rp-rest-addr">{r.address}</span>}
+                                    </div>
                                 </div>
                                 <div className="rp-rest-actions">
-                                    <button className="row-btn" title="QR Kod İndir" onClick={(e) => { e.stopPropagation(); setQrModal({ open: true, target: r }); }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+                                    <button className="item-btn" title="QR Kod İndir" onClick={(e) => { e.stopPropagation(); setQrModal({ open: true, target: r }); }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+                                        <span>QR</span>
                                     </button>
-                                    <button className="row-btn" title="Düzenle" onClick={(e) => { e.stopPropagation(); setRestModal({ open: true, target: r }); }}>✏️</button>
+                                    <button className="item-btn" title="Düzenle" onClick={(e) => { e.stopPropagation(); setRestModal({ open: true, target: r }); }}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                        <span>Düzenle</span>
+                                    </button>
                                     {userRole === 'Admin' && (
-                                        <button className="row-btn danger" title="Sil" onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(r); }}>🗑️</button>
+                                        <button className="item-btn danger" title="Sil" onClick={(e) => { e.stopPropagation(); handleDeleteRestaurant(r); }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                            <span>Sil</span>
+                                        </button>
                                     )}
                                 </div>
                             </li>
                         ))}
                     </ul>
-
                 )}
             </aside>
 
             {/* ── Right panel: menu management ────────────────────────────── */}
             <main className="rp-main">
-                <div className="rp-mobile-bar">
-                    <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>
-                        ☰ <span>Restoran Seç</span>
-                    </button>
-                </div>
 
                 {!selectedRest ? (
                     <div className="rp-placeholder">
@@ -462,10 +459,17 @@ export default function RestaurantPage() {
             {confirm && (
                 <div className="modal-overlay" onClick={() => setConfirm(null)}>
                     <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-                        <p>{confirm.message}</p>
+                        <div className="confirm-icon-box danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </div>
+                        <div className="confirm-title">Emin misiniz?</div>
+                        <p className="confirm-message">{confirm.message}</p>
                         <div className="confirm-actions">
-                            <button className="btn btn-ghost" onClick={() => setConfirm(null)}>İptal</button>
-                            <button className="btn btn-danger" onClick={confirm.onOk}>Evet, Sil</button>
+                            <button className="btn-confirm cancel" onClick={() => setConfirm(null)}>Vazgeç</button>
+                            <button className="btn-confirm danger" onClick={() => {
+                                confirm.onOk();
+                                setConfirm(null);
+                            }}>Evet, Sil</button>
                         </div>
                     </div>
                 </div>

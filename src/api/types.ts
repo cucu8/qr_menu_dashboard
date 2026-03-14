@@ -95,7 +95,7 @@ export interface UpdateProductDto extends CreateProductDto {
 export interface UserResponseDto {
   id: string;
   username: string;
-  email: string;
+  phoneNumber: string;
   role: string;
   restaurantId?: string;
   restaurantName?: string;
@@ -103,7 +103,7 @@ export interface UserResponseDto {
 
 export interface CreateUserRequestDto {
   username: string;
-  email: string;
+  phoneNumber: string;
   password?: string;
   role: 'Admin' | 'Owner';
   restaurantId?: string;

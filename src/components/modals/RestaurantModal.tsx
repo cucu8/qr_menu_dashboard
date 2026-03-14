@@ -10,7 +10,7 @@ interface RestaurantModalProps {
     isOpen: boolean;
     restaurant: Restaurant | null;   // null = create mode
     onClose: () => void;
-    onSave: (data: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; email: string; password: string }) => Promise<void>;
+    onSave: (data: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; phoneNumber: string; email?: string; password: string }) => Promise<void>;
 }
 
 export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }: RestaurantModalProps) {
@@ -20,15 +20,17 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
             .required('Restoran adı zorunludur.')
             .max(200, 'Maksimum 200 karakter olabilir.'),
         description: Yup.string().max(1000, 'Maksimum 1000 karakter olabilir.'),
-        phone: Yup.string().max(50, 'Maksimum 50 karakter olabilir.'),
+        phone: !restaurant
+            ? Yup.string().required('Telefon numarası zorunludur.').max(50, 'Maksimum 50 karakter olabilir.')
+            : Yup.string().max(50, 'Maksimum 50 karakter olabilir.'),
         address: Yup.string().max(500, 'Maksimum 500 karakter olabilir.'),
         // Owner validation (only for new restaurants)
         ownerUsername: !restaurant
             ? Yup.string().required('Kullanıcı adı zorunludur.').min(3, 'En az 3 karakter olmalı.')
             : Yup.string().optional(),
-        ownerEmail: !restaurant
-            ? Yup.string().required('E-posta zorunludur.').email('Geçerli bir e-posta giriniz.')
-            : Yup.string().optional(),
+        ownerEmail: Yup.string()
+            .email('Geçerli bir e-posta giriniz.')
+            .optional(),
         ownerPassword: !restaurant
             ? Yup.string().required('Şifre zorunludur.').min(6, 'En az 6 karakter olmalı.')
             : Yup.string().optional()
@@ -69,6 +71,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
 
                 const ownerDetails = !restaurant ? {
                     username: values.ownerUsername,
+                    phoneNumber: values.phone, // Reusing restaurant phone
                     email: values.ownerEmail,
                     password: values.ownerPassword
                 } : undefined;
@@ -198,7 +201,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                                     {formik.touched.ownerUsername && formik.errors.ownerUsername && <p className="field-error">{formik.errors.ownerUsername}</p>}
                                 </div>
                                 <div className="form-row">
-                                    <label>E-posta *</label>
+                                    <label>E-posta</label>
                                     <input
                                         name="ownerEmail"
                                         type="email"

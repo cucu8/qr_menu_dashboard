@@ -5,7 +5,7 @@ import './LoginPage.css';
 
 export default function LoginPage() {
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
         try {
-            const res = await authApi.login({ email, password });
+            const res = await authApi.login({ phoneNumber, password });
             localStorage.setItem('dashboard_token', res.token);
             navigate('/');
         } catch (err: any) {
@@ -34,13 +34,13 @@ export default function LoginPage() {
                 {error && <div className="login-error">{error}</div>}
                 <form onSubmit={handleLogin} className="login-form">
                     <div className="form-group">
-                        <label>E-posta Adresi</label>
+                        <label>Telefon Numarası</label>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={e => setPhoneNumber(e.target.value)}
                             required
-                            placeholder="E-posta adresiniz..."
+                            placeholder="Telefon numaranız..."
                         />
                     </div>
                     <div className="form-group">
