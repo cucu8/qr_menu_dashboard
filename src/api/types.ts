@@ -96,6 +96,7 @@ export interface UserResponseDto {
   id: string;
   username: string;
   phoneNumber: string;
+  email?: string;
   role: string;
   restaurantId?: string;
   restaurantName?: string;
@@ -104,6 +105,7 @@ export interface UserResponseDto {
 export interface CreateUserRequestDto {
   username: string;
   phoneNumber: string;
+  email?: string;
   password?: string;
   role: 'Admin' | 'Owner';
   restaurantId?: string;

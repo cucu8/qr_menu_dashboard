@@ -12,6 +12,7 @@ interface UserModalProps {
 export default function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     const [form, setForm] = useState<CreateUserRequestDto>({
         username: '',
+        phoneNumber: '',
         email: '',
         password: '',
         role: 'Owner',
@@ -23,7 +24,7 @@ export default function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
 
     useEffect(() => {
         if (isOpen) {
-            setForm({ username: '', email: '', password: '', role: 'Owner', restaurantId: undefined });
+            setForm({ username: '', phoneNumber: '', email: '', password: '', role: 'Owner', restaurantId: undefined });
             setError(null);
             fetchRestaurants();
         }
@@ -43,7 +44,7 @@ export default function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.username.trim() || !form.email.trim() || !form.password?.trim()) {
+        if (!form.username.trim() || !form.phoneNumber.trim() || !form.password?.trim()) {
             setError('Lütfen tüm zorunlu alanları doldurun.');
             return;
         }
@@ -86,14 +87,25 @@ export default function UserModal({ isOpen, onClose, onSave }: UserModalProps) {
                     </div>
 
                     <div className="form-row">
-                        <label>E-posta Adresi *</label>
+                        <label>Telefon Numarası *</label>
+                        <input
+                            type="text"
+                            className="form-input"
+                            value={form.phoneNumber}
+                            onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+                            placeholder="ör: 0555..."
+                            required
+                        />
+                    </div>
+
+                    <div className="form-row">
+                        <label>E-posta Adresi</label>
                         <input
                             type="email"
                             className="form-input"
                             value={form.email}
                             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                             placeholder="ör: test@test.com"
-                            required
                         />
                     </div>
 
