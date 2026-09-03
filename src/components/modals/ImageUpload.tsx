@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BASE_URL } from '../../api/types';
+import { resolveImageUrl } from '../../api/types';
 import './ImageUpload.css';
 
 interface ImageUploadProps {
@@ -19,7 +19,7 @@ export default function ImageUpload({ value, onChange, label = 'Fotoğraf' }: Im
             setPreviewUrl(objectUrl);
             return () => URL.revokeObjectURL(objectUrl);
         } else if (typeof value === 'string') {
-            setPreviewUrl(`${BASE_URL}${value}`);
+            setPreviewUrl(resolveImageUrl(value) ?? null);
         } else {
             setPreviewUrl(null);
         }
@@ -50,7 +50,7 @@ export default function ImageUpload({ value, onChange, label = 'Fotoğraf' }: Im
                     <div className="image-upload__placeholder">
                         <span className="image-upload__icon">📷</span>
                         <span>Fotoğraf seç veya sürükle</span>
-                        <span className="image-upload__hint">JPG, PNG, WEBP — maks 5MB</span>
+                        <span className="image-upload__hint">JPG, PNG, WEBP — maks 8MB</span>
                     </div>
                 )}
             </div>

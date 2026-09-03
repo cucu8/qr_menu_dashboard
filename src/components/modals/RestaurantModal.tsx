@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import type { Restaurant, CreateRestaurantDto, UpdateRestaurantDto } from '../../api/types';
-import { uploadApi } from '../../api';
+import { uploadApi, userApi, extractErrorMessage } from '../../api';
 import ImageUpload from './ImageUpload';
 import './Modal.css';
 
@@ -13,6 +13,28 @@ interface RestaurantModalProps {
     onSave: (data: CreateRestaurantDto | UpdateRestaurantDto, id?: string, ownerDetails?: { username: string; phoneNumber: string; email?: string; password: string }) => Promise<void>;
 }
 
+// "(5xx)-xxx-xx-xx" görünümü için canlı biçimlendirme. Baştaki 0'ı (varsa) atar,
+// kalan 10 haneyi maskeler — hem yeni girişte hem mevcut kayıtları düzenlerken kullanılır.
+function formatPhoneDisplay(raw: string): string {
+    let digits = raw.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+    digits = digits.slice(0, 10);
+
+    let out = '';
+    if (digits.length > 0) out += '(' + digits.slice(0, 3);
+    if (digits.length >= 3) out += ')';
+    if (digits.length > 3) out += '-' + digits.slice(3, 6);
+    if (digits.length > 6) out += '-' + digits.slice(6, 8);
+    if (digits.length > 8) out += '-' + digits.slice(8, 10);
+    return out;
+}
+
+// Maskeli değeri backend'in beklediği "0XXXXXXXXXX" (11 haneli) forma çevirir.
+function toRawPhone(masked: string): string {
+    const digits = masked.replace(/\D/g, '').slice(0, 10);
+    return digits ? '0' + digits : '';
+}
+
 export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }: RestaurantModalProps) {
 
     const validationSchema = Yup.object().shape({
@@ -21,8 +43,11 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
             .max(200, 'Maksimum 200 karakter olabilir.'),
         description: Yup.string().max(1000, 'Maksimum 1000 karakter olabilir.'),
         phone: !restaurant
-            ? Yup.string().required('Telefon numarası zorunludur.').max(50, 'Maksimum 50 karakter olabilir.')
-            : Yup.string().max(50, 'Maksimum 50 karakter olabilir.'),
+            ? Yup.string()
+                .required('Telefon numarası zorunludur.')
+                .test('phone-format', 'Geçerli bir telefon numarası giriniz. Örn: (555)-000-00-00', (val) => !!val && val.replace(/\D/g, '').length === 10)
+            : Yup.string()
+                .test('phone-format', 'Geçerli bir telefon numarası giriniz. Örn: (555)-000-00-00', (val) => !val || val.replace(/\D/g, '').length === 10),
         address: Yup.string().max(500, 'Maksimum 500 karakter olabilir.'),
         // Owner validation (only for new restaurants)
         ownerUsername: !restaurant
@@ -53,6 +78,18 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
         validateOnChange: false,
         onSubmit: async (values) => {
             try {
+                // 0. Yeni restoran ise, resim yüklemeden/restoran oluşturmadan önce
+                // kullanıcı adı/telefon çakışmasını kontrol et — çakışıyorsa hiçbir şeye dokunma.
+                const rawPhone = toRawPhone(values.phone);
+
+                if (!restaurant) {
+                    const { available } = await userApi.checkAvailability(values.ownerUsername, rawPhone);
+                    if (!available) {
+                        formik.setStatus('Bu telefon numarası veya kullanıcı adı zaten kullanımda.');
+                        return;
+                    }
+                }
+
                 let currentLogoUrl = typeof values.logoUrl === 'string' ? values.logoUrl : undefined;
 
                 // 1. Yeni bir dosya seçilmişse önce onu yükle
@@ -65,13 +102,13 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                     name: values.name,
                     description: values.description,
                     logoUrl: currentLogoUrl,
-                    phone: values.phone,
+                    phone: rawPhone,
                     address: values.address
                 };
 
                 const ownerDetails = !restaurant ? {
                     username: values.ownerUsername,
-                    phoneNumber: values.phone, // Reusing restaurant phone
+                    phoneNumber: rawPhone, // Reusing restaurant phone
                     email: values.ownerEmail,
                     password: values.ownerPassword
                 } : undefined;
@@ -83,9 +120,9 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                 // 3. Kaydet
                 await onSave(dto, restaurant?.id, ownerDetails);
                 onClose();
-            } catch (err: any) {
+            } catch (err) {
                 console.error('Save failed:', err);
-                formik.setStatus('Kaydetme başarısız, lütfen tekrar deneyin.');
+                formik.setStatus(extractErrorMessage(err, 'Kaydetme başarısız, lütfen tekrar deneyin.'));
             }
         },
     });
@@ -98,7 +135,7 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                     name: restaurant.name,
                     description: restaurant.description ?? '',
                     logoUrl: restaurant.logoUrl ?? undefined,
-                    phone: restaurant.phone ?? '',
+                    phone: formatPhoneDisplay(restaurant.phone ?? ''),
                     address: restaurant.address ?? '',
                     isActive: restaurant.isActive,
                     ownerUsername: '',
@@ -164,9 +201,10 @@ export default function RestaurantModal({ isOpen, restaurant, onClose, onSave }:
                                 name="phone"
                                 className={`form-input ${formik.errors.phone ? 'error' : ''}`}
                                 value={formik.values.phone}
-                                onChange={formik.handleChange}
+                                onChange={(e) => formik.setFieldValue('phone', formatPhoneDisplay(e.target.value))}
                                 onBlur={formik.handleBlur}
-                                placeholder="0555 000 00 00"
+                                placeholder="(555)-000-00-00"
+                                maxLength={16}
                             />
                             {formik.errors.phone && <p className="field-error">{formik.errors.phone}</p>}
                         </div>

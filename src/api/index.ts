@@ -13,6 +13,23 @@ export { BASE_URL };
 
 export const getToken = () => localStorage.getItem('dashboard_token');
 
+// API çağrılarından fırlatılan `API <status>: <body>` hatalarından, body JSON ise
+// içindeki { message } alanını çıkarır; yoksa fallback metni döner.
+export const extractErrorMessage = (err: unknown, fallback: string): string => {
+    let message = fallback;
+    const raw = err instanceof Error ? err.message : undefined;
+    const jsonStart = raw?.indexOf('{') ?? -1;
+    if (jsonStart >= 0) {
+        try {
+            const parsed = JSON.parse(raw!.slice(jsonStart));
+            if (parsed?.message) message = parsed.message;
+        } catch {
+            // parse edilemediyse varsayılan mesaj kalsın
+        }
+    }
+    return message;
+};
+
 const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
     const token = getToken();
     const headers: Record<string, string> = {
@@ -46,6 +63,8 @@ export const userApi = {
     getAll: () => request<UserResponseDto[]>('/users'),
     create: (dto: CreateUserRequestDto) => request<UserResponseDto>('/users', { method: 'POST', body: JSON.stringify(dto) }),
     resetPassword: (id: string) => request<{ message: string }>(`/users/${id}/reset-password`, { method: 'POST' }),
+    checkAvailability: (username: string, phoneNumber: string) =>
+        request<{ available: boolean }>(`/users/check-availability?username=${encodeURIComponent(username)}&phoneNumber=${encodeURIComponent(phoneNumber)}`),
 };
 
 // ── Restaurants ──────────────────────────────────────────────────────
@@ -108,7 +127,10 @@ export const uploadApi = {
             body: form,
             headers
         });
-        if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+        if (!res.ok) {
+            const text = await res.text().catch(() => res.statusText);
+            throw new Error(`API ${res.status}: ${text}`);
+        }
         const data: { url: string } = await res.json();
         return data.url;
     },

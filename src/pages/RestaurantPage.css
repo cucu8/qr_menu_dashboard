@@ -247,6 +247,24 @@
     object-fit: cover;
 }
 
+.rp-cat-name-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rp-cat-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.rp-cat-desc {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
 .rp-cat-count {
     font-size: 0.8rem;
     color: var(--text-muted);

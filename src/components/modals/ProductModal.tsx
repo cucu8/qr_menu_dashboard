@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product, CreateProductDto, UpdateProductDto } from '../../api/types';
-import { uploadApi } from '../../api';
+import { uploadApi, extractErrorMessage } from '../../api';
 import ImageUpload from './ImageUpload';
 import './Modal.css';
 
@@ -68,8 +68,9 @@ export default function ProductModal({ isOpen, product, onClose, onSave }: Produ
             const dto = product ? ({ ...finalForm, isActive } as UpdateProductDto) : finalForm as CreateProductDto;
             await onSave(dto, product?.id);
             onClose();
-        } catch {
-            setError('Kaydetme başarısız, tekrar dene.');
+        } catch (err) {
+            console.error('Save failed:', err);
+            setError(extractErrorMessage(err, 'Kaydetme başarısız, tekrar dene.'));
         } finally {
             setSaving(false);
         }

@@ -7,6 +7,13 @@ const BASE_URL = isLocal ? 'http://localhost:5252' : 'https://api.htreklam.com';
 const FRONTEND_URL = isLocal ? 'http://localhost:3000' : 'https://qrmenu.htreklam.com'; // CANLI ORTAM QR DOMAINI BURAYA GELECEK
 export { BASE_URL, FRONTEND_URL };
 
+// R2/CDN'e taşınmadan önce yüklenen görseller backend'den relative path (/upload/xxx) olarak dönüyordu.
+// Yeni yüklemeler artık tam CDN URL'i (https://...) döndüğü için, url zaten mutlaksa olduğu gibi kullanılır.
+export const resolveImageUrl = (url: string | null | undefined): string | undefined => {
+    if (!url) return undefined;
+    return /^https?:\/\//i.test(url) ? url : `${BASE_URL}${url}`;
+};
+
 // ── Restaurant ────────────────────────────────────────────
 export interface Restaurant {
   id: string;

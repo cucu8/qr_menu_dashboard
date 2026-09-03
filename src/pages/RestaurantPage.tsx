@@ -11,7 +11,7 @@ import CategoryModal from '../components/modals/CategoryModal';
 import ProductModal from '../components/modals/ProductModal';
 import QrCodeModal from '../components/modals/QrCodeModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
-import { BASE_URL } from '../api/types';
+import { resolveImageUrl } from '../api/types';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -36,10 +36,15 @@ function SortableCategory({ cat, onEdit, onDelete, onAddProduct, renderProducts 
             <div className="rp-cat-header">
                 <div className="rp-cat-title">
                     <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', marginRight: '10px', touchAction: 'none' }}>☰</span>
-                    {cat.photoUrl && <img className="rp-cat-photo" src={`${BASE_URL}${cat.photoUrl}`} alt="" />}
-                    <span>{cat.name}</span>
+                    {cat.photoUrl && <img className="rp-cat-photo" src={resolveImageUrl(cat.photoUrl)} alt="" />}
+                    <div className="rp-cat-name-block">
+                        <span className="rp-cat-name">{cat.name}</span>
+                        {cat.description && <span className="rp-cat-desc">{cat.description}</span>}
+                    </div>
                     <span className="rp-cat-count">{cat.products.length} ürün</span>
-                    {!cat.isActive && <span className="badge badge-red" style={{ fontSize: '11px', padding: '2px 8px' }}>Pasif</span>}
+                    <span className={`badge ${cat.isActive ? 'badge-green' : 'badge-red'}`} style={{ fontSize: '11px', padding: '2px 8px' }}>
+                        {cat.isActive ? 'Aktif' : 'Pasif'}
+                    </span>
                 </div>
                 <div className="rp-cat-actions">
                     <button className="row-btn" onClick={() => onEdit(cat)}>✏️ Düzenle</button>
@@ -60,7 +65,7 @@ function SortableProductRow({ p, onEdit, onDelete }: { p: Product, onEdit: (p: P
             <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="drag-handle" {...listeners} {...attributes} style={{ cursor: 'grab', touchAction: 'none' }}>☰</span>
                 {p.photoUrl && (
-                    <img className="prod-thumb" src={`${BASE_URL}${p.photoUrl}`} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <img className="prod-thumb" src={resolveImageUrl(p.photoUrl)} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 )}
             </td>
             <td>
@@ -166,7 +171,10 @@ export default function RestaurantPage() {
                         restaurantId: newRest.id
                     });
                 } catch (e) {
-                    console.error("Owner creation failed", e);
+                    // Owner oluşturulamadıysa sahipsiz restoran kalmasın, geri al
+                    await restaurantApi.delete(newRest.id);
+                    await loadRestaurants();
+                    throw e;
                 }
             }
         }
@@ -314,7 +322,7 @@ export default function RestaurantPage() {
                             >
                                 <div className="rp-item-top">
                                     <div className="rp-rest-logo">
-                                        {r.logoUrl ? <img src={`${BASE_URL}${r.logoUrl}`} alt="" /> : '🏪'}
+                                        {r.logoUrl ? <img src={resolveImageUrl(r.logoUrl)} alt="" /> : '🏪'}
                                     </div>
                                     <div className="rp-rest-info">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
